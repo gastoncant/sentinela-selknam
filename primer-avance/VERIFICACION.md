@@ -41,3 +41,13 @@ python process_pilot.py recalculo
 
 El manifiesto de la versión entregada conserva el método, las escenas y hashes. La carpeta sources contiene los dos metadatos STAC utilizados. El centro solicitado es −67,30029166119341°, −54,5262142810433°. La grilla efectiva es EPSG 32719, con límites 609040, 3955640, 610960, 3957560 metros.
 
+## Identidad, relieve y lectura de evidencias
+
+La compilación TypeScript/Vite pasó con el nuevo logo, las capas del selector, la guía visible y las ampliaciones por ficha. Se conservaron las escenas, el código del Worker científico y los identificadores de las ejecuciones. Las pruebas de índices, geometrías, máscaras y referencias geográficas siguen pasando.
+
+En el navegador se comprobaron OpenTopoMap con teselas de relieve cargadas, el cambio a OpenStreetMap, el zoom y la apertura del piloto. La revisión detectó un error de limpieza de eventos al retirar una capa: se corrigió conservando los eventos internos de Leaflet y retirando solo el manejador propio. Al repetir el cambio de capa, zoom y apertura no se registraron errores JavaScript nuevos.
+
+En la zona de agua 6 del piloto, las dos ampliaciones tienen el mismo viewBox `124 48 68 68`, la misma geometría y sus respectivas imágenes de 2020 y 2026. En 390 × 844 midieron 153 px por lado cada una y el documento 375 px de ancho, sin desbordamiento horizontal. Se comprobó el avance del deslizador con teclado a 51 %, la lista ordenada por superficie y el footer con únicamente el texto «Gobierno de TDF» y el logo cargado. Se revisó también la distribución en 1440 × 1000 y se mantuvieron controles principales de al menos 50 px.
+
+La lectura visual no valida la causa ambiental de los polígonos. El piloto costero puede incluir cambios del agua que ya existía, variaciones de marea y otras causas ajenas a diques. Las limitaciones y criterios de validación se detallan en `CRITERIOS_DE_MADUREZ.md`. La evaluación con operadores, el lector de pantalla y las mediciones en conexiones lentas siguen pendientes. El PNG original del logo ocupa unos 661 kB y queda sujeto al presupuesto de recursos del futuro despliegue.
+

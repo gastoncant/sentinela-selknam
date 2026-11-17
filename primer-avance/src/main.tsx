@@ -6,11 +6,14 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Feature, Polygon, MultiPolygon } from 'geojson';
 import 'leaflet/dist/leaflet.css';
 import './style.css';
+import './design.css';
 import { CropSelector, shortcuts } from './CropSelector';
 import CropWorker from './crop.worker?worker&inline';
 import type { Analysis } from './crop-types';
 import { loadCrops, storeCrop } from './crop-cache';
 import { LoadingProgress, progressStage } from './LoadingProgress';
+import { EvidencePair } from './EvidencePair';
+import { ReadingGuide } from './ReadingGuide';
 import { assetUrl } from './assets';
 
 type Properties = {
@@ -93,6 +96,9 @@ function SpectralMap({ features, selected, onSelect, signal, swipe, show, extent
       attributionControl: false,
       zoomControl: false,
       scrollWheelZoom: false,
+      zoomAnimation: false, fadeAnimation: false, markerZoomAnimation: false,
+      maxBounds: L.latLngBounds([extent[1], extent[0]], [extent[3], extent[2]]).pad(0.02),
+      maxBoundsViscosity: 1,
     });
     map.current = currentMap;
     currentMap.getPane('overlayPane')?.setAttribute('aria-hidden', 'true');
@@ -113,6 +119,7 @@ function SpectralMap({ features, selected, onSelect, signal, swipe, show, extent
     return () => {
       resize.disconnect();
       [before, afterLayer].forEach(layer => { layer.off('load', imageLoaded); layer.off('error', imageFailed); });
+      currentMap.stop();
       currentMap.remove();
       map.current = null;
     };
@@ -193,6 +200,7 @@ function App() {
   const [pilot, setPilot] = useState<Analysis | null>(null);
   const [error, setError] = useState('');
   const [signal, setSignal] = useState('todas');
+  const [order, setOrder] = useState('area');
   const [selected, setSelected] = useState('');
   const [page, setPage] = useState(1);
   const [view, setView] = useState<View>('compare');
@@ -418,7 +426,9 @@ function App() {
   }, [pendingSelection]);
 
   const features = pilot?.features || [];
-  const filtered = features.filter(feature => signal === 'todas' || feature.properties.signal === signal);
+  const filtered = features.filter(feature => signal === 'todas' || feature.properties.signal === signal)
+    .sort((a, b) => order === 'area' ? b.properties.area_m2 - a.properties.area_m2
+      : Number(a.properties.id.split('-').pop()) - Number(b.properties.id.split('-').pop()));
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const shown = filtered.slice((page - 1) * pageSize, page * pageSize);
   const chosen = features.find(feature => feature.properties.id === selected);
@@ -507,8 +517,8 @@ function App() {
   return <>
     <a className="skip-link" href="#principal">Ir al contenido</a>
     <header className="site-header">
-      <a className="brand" href="./"><span className="province-mark" aria-hidden="true" />
-        <span><strong>Sentinela Selknam</strong><span>Tierra del Fuego · Observación ambiental</span></span>
+      <a className="brand" href="./"><img className="brand-logo" src={assetUrl('./brand/ko-taix-sentinela.png')} width="76" height="76" alt="" />
+        <span><strong>Sentinela <span className="brand-selknam">Selknam</span></strong><span>Monitoreo de agua y vegetación</span></span>
       </a>
       {cloud && <button className="header-button" onClick={() => setLogin(true)}>
         {user ? 'Mi sesión' : 'Ingresar al equipo'}
@@ -516,10 +526,10 @@ function App() {
     </header>
 
     <main id="principal">
-      <div className="page-heading">
+      <div className={"page-heading " + (scope === 'pilot' ? 'is-analysis' : '')}>
         <div><p className="location">Isla Grande de Tierra del Fuego</p>
-          <h1>Revisar cambios en el territorio</h1>
-          <p>Elegí un recorte de la isla y compará los cambios de agua y vegetación.</p>
+          <h1>Comparar cambios en la Isla Grande</h1>
+          <p>Elegí un área, contrastá dos fechas y registrá lo que observás.</p>
         </div>
         <details className="quick-help">
           <summary>¿Cómo uso esta página?</summary>
@@ -533,7 +543,7 @@ function App() {
         </details>
       </div>
 
-      {!cloudForRun && <p className="demo-notice"><strong>Estás en una demostración.</strong> Las imágenes son reales. Las revisiones de prueba quedan guardadas en este navegador.</p>}
+      {!cloudForRun && <p className="demo-notice"><strong>Entorno de demostración</strong><span>Imágenes satelitales reales · Revisiones guardadas en este dispositivo</span></p>}
 
       <div className="scope-options" aria-label="Vista de trabajo">
         <button aria-pressed={scope === 'province'} onClick={requestCatalog} disabled={processing || busy}>Elegir un recorte</button>
@@ -551,7 +561,7 @@ function App() {
             {shortcuts.map(item => <button key={item.label} onClick={() => setCenter(item.center)} disabled={processing}>{item.label}</button>)}
           </div>
           <div className="map-wrap"><CropSelector center={center} onChange={setCenter} disabled={processing} /></div>
-          <p className="selector-hint">Tocá otro punto dentro del contorno para mover el recorte. También podés usar los botones de zona con el teclado.</p>
+          <p className="selector-hint"><strong>Mapa de referencia.</strong> El relieve, los ríos y los caminos ayudan a ubicar el recorte. Esta cartografía no representa las fechas del análisis. Tocá un punto dentro del contorno o usá los botones de zona.</p>
         </section>
         <aside className="review-panel crop-request" aria-label="Preparar comparación del recorte">
           <div className="section-heading"><span className="step" aria-hidden="true">2</span><div><h2>Comparar este lugar</h2><p>Dos temporadas, sobre la misma superficie.</p></div></div>
@@ -573,7 +583,7 @@ function App() {
         <div className="workbench" aria-busy={!pilot}>
           <section className="comparison" aria-labelledby="compare-title">
             <div className="section-heading"><span className="step" aria-hidden="true">1</span><div>
-              <h2 id="compare-title" tabIndex={-1}>{pilot?.label || 'Abrir comparación'}</h2><p>Elegí qué fecha querés ver.</p>
+              <h2 id="compare-title" tabIndex={-1}>{pilot?.label || 'Abrir comparación'}</h2><p>El mismo lugar en dos fechas · imagen infrarroja</p>
             </div></div>
             <div className="view-options" aria-label="Fecha de la imagen">
               <button aria-pressed={view === 'before'} onClick={() => setView('before')}><strong>Ver 2020</strong><span>{dateLabel(0)}</span></button>
@@ -590,11 +600,15 @@ function App() {
                 : <p className="loading" role="status">Cargando imágenes y zonas…</p>}
               {view === 'compare' && <div className="curtain-line" style={{ left: swipe + '%' }} aria-hidden="true"><span>↔</span></div>}
               <span className="north" aria-hidden="true">N ↑</span>
+              <div className="image-date-tags" aria-hidden="true">
+                {view !== 'after' && <span className="before-date">2020 · antes</span>}
+                {view !== 'before' && <span className="after-date">2026 · después</span>}
+              </div>
               {chosen && <p className="map-selection">{zoneName(chosen)} · contorno blanco</p>}
             </div>
             {error && pilot && <p className="error-message" role="alert">{error}</p>}
             {view === 'compare' && <div className="slider-control">
-              <label htmlFor="swipe">Mové el control para comparar las imágenes</label>
+              <label htmlFor="swipe">Deslizá para ver el mismo lugar en cada fecha</label>
               <div><span>2020</span><input id="swipe" type="range" min="0" max="100" value={swipe}
                 onChange={event => setSwipe(+event.target.value)} aria-valuetext={swipe + ' por ciento de la imagen de 2020'} /><span>2026</span></div>
             </div>}
@@ -602,32 +616,39 @@ function App() {
               <button type="button" onClick={() => setReset(value => value + 1)}>Ver recorte completo</button>
               {<label className="check-control"><input type="checkbox" checked={show} onChange={event => setShow(event.target.checked)} /> Mostrar zonas para revisar</label>}
             </div>
+            <div className="analysis-summary" aria-label="Resumen de cambios del recorte">
+              <div><strong>{features.filter(feature => feature.properties.signal === 'agua').length}</strong><span>zonas con más señal de agua</span></div>
+              <div><strong>{features.filter(feature => feature.properties.signal === 'vegetacion').length}</strong><span>zonas con menos señal de vegetación</span></div>
+              <div><strong>{coverage || '…'} %</strong><span>del recorte se pudo comparar</span></div>
+            </div>
             <div className="map-legend" aria-label="Colores de las zonas">
-              <span><i className="water-key" aria-hidden="true" /> Cambios en agua</span><span><i className="vegetation-key" aria-hidden="true" /> Cambios en vegetación</span>
+              <span><i className="water-key" aria-hidden="true" /> Aumento de señal de agua</span><span><i className="vegetation-key" aria-hidden="true" /> Disminución de señal de vegetación</span>
             </div>
             <p className="coverage-notice"><strong>Superficie comparable: {coverage || '…'} %.</strong> {Number(coverage.replace(',', '.')) < 70 ? 'Cobertura limitada: interpretá los resultados con especial cuidado.' : 'El gris marca los píxeles excluidos por falta de observación válida.'}</p>
             {pilot && !features.length && <p className="coverage-notice">No se encontraron componentes que superen los criterios en la superficie observable. Esto no demuestra ausencia de castores.</p>}
-            <details className="image-help"><summary>¿Cómo interpreto esta comparación?</summary>
-              <p>Las dos imágenes usan la misma escala visual. El rojo ayuda a distinguir la vegetación; el gris marca píxeles excluidos. Los contornos indican aumento del índice de agua o disminución del índice de vegetación entre las fechas elegidas.</p>
-              <p>Las diferencias de estación, nivel de agua, nieve, sombras y otras causas pueden producir cambios. Estos resultados orientan la revisión y no confirman diques ni presencia de castores.</p>
-            </details>
+            <ReadingGuide />
           </section>
 
           <aside className="review-panel" aria-label="Elegir y revisar una zona">
             {!chosen ? <>
               <div className="section-heading"><span className="step" aria-hidden="true">2</span><div>
-                <h2 ref={listHeading} tabIndex={-1}>Elegir una zona</h2><p>Tocá una fila para abrir su ficha.</p>
+                <h2 ref={listHeading} tabIndex={-1}>Cambios para revisar</h2><p>Abrí una zona para comparar sus dos ampliaciones.</p>
               </div></div>
               <label className="filter-label" htmlFor="signal">¿Qué cambios querés revisar?</label>
               <select id="signal" value={signal} onChange={event => { setSignal(event.target.value); setPage(1); }}>
                 <option value="todas">Agua y vegetación</option><option value="agua">Solo agua</option><option value="vegetacion">Solo vegetación</option>
               </select>
+              <label className="filter-label order-label" htmlFor="order">Orden de la lista</label>
+              <select id="order" value={order} onChange={event => { setOrder(event.target.value); setPage(1); }}>
+                <option value="area">Mayor superficie primero</option><option value="number">Número de zona</option>
+              </select>
+              <p className="sort-hint">La superficie no indica gravedad ni prioridad de intervención.</p>
               <p className="result-count" aria-live="polite">{pilot ? filtered.length + ' zonas disponibles' : 'Cargando zonas…'}</p>
               <ul className="zone-list">
                 {shown.map(feature => {
                   const reviewed = reviews.some(review => review.candidate_id === feature.properties.id);
                   return <li key={feature.properties.id}><button onClick={() => requestSelection(feature.properties.id)}>
-                    <span className="zone-description"><strong>{zoneName(feature)}</strong>
+                    <span className={'zone-description signal-' + feature.properties.signal}><strong>{zoneName(feature)}</strong>
                       <span>{feature.properties.area_m2.toLocaleString('es-AR')} m² · {reviewed ? 'Ya revisada' : 'Sin revisar'}</span>
                     </span><span className="open-zone">Abrir →</span>
                   </button></li>;
@@ -644,8 +665,10 @@ function App() {
               <h2 className="zone-title" ref={reviewHeading} tabIndex={-1}>{zoneName(chosen)}</h2>
               <p className="zone-area">Superficie del cambio <strong>{chosen.properties.area_m2.toLocaleString('es-AR')} m²</strong></p>
               <p className="signal-explanation">{chosen.properties.signal === 'agua'
-                ? 'Se marcó un posible aumento de agua. Compará las dos imágenes para interpretarlo.'
-                : 'Se marcó un posible cambio relacionado con la vegetación. Compará las dos imágenes para interpretarlo.'}</p>
+                ? 'En esta superficie aumentó la señal espectral asociada al agua. Puede haber habido agua en ambas fechas: el cambio de índice no demuestra una inundación nueva. Compará las dos ampliaciones.'
+                : 'En esta superficie disminuyó el índice de vegetación. Compará el aspecto del área roja y su entorno entre las dos fechas.'}</p>
+              {pilot && <EvidencePair analysis={pilot} candidate={chosen} />}
+              <p className="evidence-caution">El cambio puede ser sutil en la imagen. La estación, las sombras y el nivel de agua también influyen. Para atribuirlo a castores hace falta evidencia adicional.</p>
               <div className="section-heading review-step"><span className="step" aria-hidden="true">3</span><h3>Registrar lo observado</h3></div>
               <form onSubmit={save}>
                 <fieldset disabled={busy}>
@@ -696,7 +719,7 @@ function App() {
         </details>
       </section>
     </main>
-    <footer><strong>Sentinela Selknam</strong><span>Apoyo a la revisión ambiental · Tierra del Fuego</span><span>Primer avance</span></footer>
+    <footer className="government-footer"><img src={assetUrl('./brand/ko-taix-sentinela.png')} width="72" height="72" alt="Logo de Sentinela Selknam, inspirado en Ko’taix" /><strong>Gobierno de TDF</strong></footer>
 
     <dialog ref={discardDialog} onClose={() => setPendingSelection(null)} aria-labelledby="discard-title">
       <h2 id="discard-title">Tu comentario todavía no está guardado</h2>

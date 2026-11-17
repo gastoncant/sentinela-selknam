@@ -23,12 +23,15 @@ export function CropSelector({ center, onChange, disabled }: {
   center: [number, number]; onChange: (center: [number, number]) => void; disabled: boolean;
 }) {
   const element = useRef<HTMLDivElement>(null), map = useRef<L.Map | null>(null);
-  const selection = useRef<L.Polygon | null>(null);
+  const selection = useRef<L.FeatureGroup | null>(null);
   const callback = useRef(onChange), locked = useRef(disabled);
   const [message, setMessage] = useState('');
+  const [base, setBase] = useState<'terrain' | 'streets'>('terrain');
+  const [backgroundError, setBackgroundError] = useState(false);
   callback.current = onChange; locked.current = disabled;
   useEffect(() => {
-    const current = L.map(element.current!, { zoomControl: false, scrollWheelZoom: false, minZoom: 6, maxZoom: 12 });
+    const current = L.map(element.current!, { zoomControl: false, scrollWheelZoom: false, minZoom: 6, maxZoom: 14,
+      zoomAnimation: false, fadeAnimation: false, markerZoomAnimation: false });
     map.current = current;
     current.attributionControl.setPrefix(false);
     current.fitBounds([[-55.15, -68.75], [-52.55, -65.05]], { padding: [20, 20] });
@@ -38,7 +41,8 @@ export function CropSelector({ center, onChange, disabled }: {
       if (!response.ok) throw new Error('Contorno no disponible');
       const data = await response.json() as FeatureCollection<MultiPolygon>;
       geometry = data.features[0].geometry;
-      L.geoJSON(data, { style: { color: '#315f78', weight: 2, fillColor: '#d9e7df', fillOpacity: 1 }, interactive: false,
+      L.geoJSON(data, { style: { color: '#173e60', weight: 4, fill: false, opacity: 0.55 }, interactive: false }).addTo(current);
+      L.geoJSON(data, { style: { color: '#ffffff', weight: 1.7, fill: false }, interactive: false,
         attribution: 'Contorno argentino de Isla Grande: IGN, generalizado' }).addTo(current);
       selection.current?.bringToFront();
     }).catch(error => { if (error.name !== 'AbortError') setMessage('No pudimos cargar el selector. Podés usar los botones de zona o el piloto.'); });
@@ -59,8 +63,25 @@ export function CropSelector({ center, onChange, disabled }: {
       callback.current(point);
     });
     const observer = new ResizeObserver(() => current.invalidateSize()); observer.observe(element.current!);
-    return () => { controller.abort(); observer.disconnect(); current.remove(); map.current = null; selection.current = null; };
+    return () => { controller.abort(); observer.disconnect(); current.stop(); current.remove(); map.current = null; selection.current = null; };
   }, []);
+  useEffect(() => {
+    if (!map.current) return;
+    setBackgroundError(false);
+    const layer = base === 'terrain'
+      ? L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+        maxNativeZoom: 15, maxZoom: 14, keepBuffer: 1,
+        attribution: 'Datos © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, SRTM · Mapa © <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)',
+      })
+      : L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 14, keepBuffer: 1,
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      });
+    const onTileError = () => setBackgroundError(true);
+    layer.on('tileerror', onTileError);
+    layer.addTo(map.current);
+    return () => { layer.off('tileerror', onTileError); layer.remove(); };
+  }, [base]);
   useEffect(() => {
     const current = map.current;
     if (!current) return;
@@ -69,14 +90,23 @@ export function CropSelector({ center, onChange, disabled }: {
     const points = [[bounds[0], bounds[1]], [bounds[2], bounds[1]], [bounds[2], bounds[3]], [bounds[0], bounds[3]]].map(p => {
       const [lon, lat] = proj4(UTM, 'EPSG:4326', p); return L.latLng(lat, lon);
     });
-    selection.current = L.polygon(points, { color: '#a84400', fillColor: '#f49a38', fillOpacity: 0.65, weight: 3, interactive: false }).addTo(current);
+    selection.current = L.featureGroup([
+      L.polygon(points, { color: '#fff', weight: 6, fill: false, interactive: false }),
+      L.polygon(points, { color: '#b65200', fillColor: '#f49a38', fillOpacity: 0.18, weight: 2.5, interactive: false }),
+      L.circleMarker([center[1], center[0]], { radius: 4, color: '#a84400', fillColor: '#fff', fillOpacity: 1, weight: 2, interactive: false }),
+    ]).addTo(current);
   }, [center]);
   return <>
     <div className="map-tools" aria-label="Controles del selector">
       <button onClick={() => map.current?.zoomIn()} type="button">Acercar +</button>
       <button onClick={() => map.current?.zoomOut()} type="button">Alejar −</button>
+      <button onClick={() => map.current?.fitBounds([[-55.15, -68.75], [-52.55, -65.05]], { padding: [20, 20] })} type="button">Ver isla</button>
+    </div>
+    <div className="basemap-options" aria-label="Capas del terreno">
+      <button type="button" aria-pressed={base === 'terrain'} onClick={() => setBase('terrain')}>Relieve y ríos</button>
+      <button type="button" aria-pressed={base === 'streets'} onClick={() => setBase('streets')}>Caminos y lugares</button>
     </div>
     <div ref={element} className="leaflet-map crop-selector" role="region" aria-label="Selector de recortes de la Isla Grande. Tocá un lugar dentro del contorno o usá los botones de zona." />
-    {message && <p className="selector-message" role="status">{message}</p>}
+    {(message || backgroundError) && <p className="selector-message" role="status">{backgroundError ? 'Algunas teselas no cargaron. Probá la otra capa o elegí una zona con los botones.' : message}</p>}
   </>;
 }

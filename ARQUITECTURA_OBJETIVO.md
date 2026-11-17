@@ -196,6 +196,8 @@ La condición se evalúa en el servidor con parámetros acordados. El mensaje in
 
 El próximo incremento debería completar persistencia real y ejecuciones versionadas. Después se implementan la bandeja y el primer canal de avisos sobre datos trazables. La cobertura y la validación avanzan por sectores según disponibilidad y capacidad de revisión.
 
+Los [criterios de madurez para una herramienta operativa](CRITERIOS_DE_MADUREZ.md) priorizan validación ambiental, comparabilidad temporal, datos compartidos, reproducibilidad, continuidad de los trabajos, recuperación y evaluación con operadores. El diseño de la interfaz y el footer de la demo no acreditan por sí solos esos criterios ni una adopción institucional.
+
 ## Seguridad y operación
 
 Las pruebas incluyen operaciones anónimas, aislamiento, modificación de roles, concurrencia, duplicación de tareas y eventos, tamaños excesivos, sesión vencida y caída de proveedor. Los callbacks verifican autenticidad. El servidor limita destinos, tipos y tamaños y protege reenvíos y administración.

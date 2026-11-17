@@ -28,6 +28,10 @@ La carga muestra una barra de 0 a 100 %, con etapa actual y animación de activi
 
 La interfaz usa texto base de 18 px, botones de al menos 50 px de alto y una paleta azul, naranja y blanca inspirada en Tierra del Fuego. La tipografía Atkinson Hyperlegible Next se incluye localmente bajo su [licencia SIL OFL](src/fonts/OFL.txt).
 
+El selector incorpora OpenTopoMap (relieve, SRTM y ríos) y OpenStreetMap (caminos y lugares), con atribuciones visibles. Las teselas se solicitan para la vista del navegador; no se ofrece descarga masiva ni mapas offline. Son cartografía de referencia, con fechas distintas de las observaciones Sentinel-2. Si el servicio falla, los accesos por zona y el piloto siguen disponibles. Proveedores: [OpenTopoMap](https://github.com/der-stefan/OpenTopoMap) y [política de teselas OSM](https://operations.osmfoundation.org/policies/tiles/).
+
+La guía «Qué estás viendo» distingue señal de agua, señal de vegetación, color infrarrojo y píxeles excluidos. Al abrir una ficha, las dos ampliaciones se extraen del mismo rectángulo de los PNG originales, sobre su grilla y con el mismo contorno. No se inventan imágenes, valores de índice por fecha ni una confirmación de diques. El orden por superficie es una ayuda de lectura; no establece prioridad ambiental. Para el paso a operación, consultar [criterios de madurez](../CRITERIOS_DE_MADUREZ.md).
+
 La lista ofrece una alternativa textual al mapa. Las escenas se comparan con máscara común y grilla UTM 19 Sur. Las capas pueden solaparse. Las señales requieren revisión y evidencia para atribuir una causa. Los umbrales son exploratorios.
 
 ## Conectar Supabase Free

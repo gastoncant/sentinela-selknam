@@ -42,6 +42,8 @@ La carpeta **docs/** incluye una compilación lista para servir desde un hosting
 
 El recorte costero tiene 69 componentes de agua y 131 de vegetación, con 95,68 % de cobertura común válida. Las capas pueden solaparse y su causa requiere evidencia independiente.
 
+La interfaz incorpora relieve y caminos como referencia de selección, una guía visible de colores y contornos y dos ampliaciones alineadas en cada ficha. El footer solicitado muestra el logo propuesto y «Gobierno de TDF». La identidad de la demo no acredita adopción institucional. Ver [identidad y prompt del logo](primer-avance/IDENTIDAD_VISUAL.md) y [criterios para una herramienta operativa seria](CRITERIOS_DE_MADUREZ.md).
+
 ## Supabase
 
 La demo arranca sin variables de entorno y permite ensayar el recorrido. Las revisiones de ese modo se guardan en el navegador del visitante.
