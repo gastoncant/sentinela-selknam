@@ -2,10 +2,13 @@
 
 La entrega actual se encuentra en [primer-avance](primer-avance/README.md). Incluye React y TypeScript, Leaflet, productos Sentinel-2 reales, integración Supabase y pruebas SQL de permisos.
 
-- [Demo web](https://gastoncant.github.io/sentinela-selknam/)
+- [Vista previa privada](https://sentinela-selknam-primer-avance.glitteringbadge.chatgpt.site)
+- [Demo de archivo único](Demo_Sentinela_Selknam.html)
 - [Documento del avance en PDF](Sentinela_Selknam_Primer_Avance.pdf)
 - [Documento editable](Sentinela_Selknam_Primer_Avance.docx)
 - [Verificación](primer-avance/VERIFICACION.md)
+
+La subida a GitHub requiere una sesión autenticada y sigue pendiente. El paquete ZIP permite presentar una carpeta compartida.
 
 El recorte costero de esta entrega produce 69 componentes de agua y 131 de vegetación. La demo publicada permite ensayar revisiones locales. La cuenta Supabase remota sigue pendiente de configuración. La guía incluye sus scripts y los pasos de conexión.
 

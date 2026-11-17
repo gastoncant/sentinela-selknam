@@ -1,0 +1,36 @@
+PRIMER AVANCE · SENTINELA SELKNAM
+
+Documento del avance
+Sentinela_Selknam_Primer_Avance.pdf
+La versión DOCX queda disponible para editar.
+
+Repositorio o carpeta del proyecto
+Descomprimir el ZIP Sentinela_Selknam_Primer_Avance.zip.
+Subir su carpeta a Drive y habilitar lectura mediante enlace para el jurado.
+El repositorio GitHub todavía requiere iniciar sesión para completar la subida.
+El último commit local de entrega es 5a832b4.
+
+Demo
+Demo_Sentinela_Selknam.html reúne código y productos en un solo archivo.
+Abrir con un navegador moderno. El archivo requiere JavaScript.
+La aplicación y sus funciones se probaron sobre HTTP. El navegador integrado
+bloqueó la apertura de archivos file://, por lo que la apertura directa
+de este HTML queda por comprobar en el navegador del equipo de presentación.
+
+Vista previa alojada para la cuenta propietaria
+https://sentinela-selknam-primer-avance.glitteringbadge.chatgpt.site
+Su acceso es privado. Para el jurado usar la carpeta compartida.
+
+Recorrido sugerido de presentación
+1. Mostrar las dos fechas y mover la cortina.
+2. Alternar candidatos y filtrar agua o vegetación.
+3. Elegir un polígono, leer sus índices y superficie.
+4. Guardar un ensayo local con un motivo.
+5. Abrir trazabilidad y descargar geometrías.
+
+Estado real
+Las escenas y los resultados espectrales son reales.
+Las revisiones de la demo se guardan en el navegador como ensayos.
+El cliente Supabase y su SQL están implementados y probados en PostgreSQL
+embebido. Falta configurar la cuenta Supabase remota y repetir la prueba
+de autenticación y persistencia compartida.
