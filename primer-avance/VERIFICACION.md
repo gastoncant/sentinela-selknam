@@ -51,3 +51,9 @@ En la zona de agua 6 del piloto, las dos ampliaciones tienen el mismo viewBox `1
 
 La lectura visual no valida la causa ambiental de los polígonos. El piloto costero puede incluir cambios del agua que ya existía, variaciones de marea y otras causas ajenas a diques. Las limitaciones y criterios de validación se detallan en `CRITERIOS_DE_MADUREZ.md`. La evaluación con operadores, el lector de pantalla y las mediciones en conexiones lentas siguen pendientes. El PNG original del logo ocupa unos 661 kB y queda sujeto al presupuesto de recursos del futuro despliegue.
 
+## Revisión del logo y footer para la hackathon
+
+Se reemplazó la marca por una versión con cuernos laterales, máscara ovalada, franjas y colores fueguinos, generada a partir de dos referencias visuales aportadas por el usuario. El PNG anterior se conserva en `design/archive`; las referencias recibidas no se publicaron en el sitio. Cabecera y footer usan el nuevo nombre de archivo `ko-taix-sentinela-v2.png`, evitando reutilizar una versión cacheada de la marca anterior.
+
+La compilación TypeScript/Vite pasó. El navegador mostró el logo cargado, Sentinela Selknam, Gobierno de TDF, Hackathon Soberanía Tech 2026 y las leyendas de derechos, licencias de terceros y alcance del prototipo. En 390 × 844, el documento midió 375 px de ancho, sin desbordamiento horizontal. La revisión también comprobó la composición del footer en escritorio. El análisis científico y sus datos no se modificaron.
+

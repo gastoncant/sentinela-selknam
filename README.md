@@ -42,7 +42,7 @@ La carpeta **docs/** incluye una compilación lista para servir desde un hosting
 
 El recorte costero tiene 69 componentes de agua y 131 de vegetación, con 95,68 % de cobertura común válida. Las capas pueden solaparse y su causa requiere evidencia independiente.
 
-La interfaz incorpora relieve y caminos como referencia de selección, una guía visible de colores y contornos y dos ampliaciones alineadas en cada ficha. El footer solicitado muestra el logo propuesto y «Gobierno de TDF». La identidad de la demo no acredita adopción institucional. Ver [identidad y prompt del logo](primer-avance/IDENTIDAD_VISUAL.md) y [criterios para una herramienta operativa seria](CRITERIOS_DE_MADUREZ.md).
+La interfaz incorpora relieve y caminos como referencia de selección, una guía visible de colores y contornos y dos ampliaciones alineadas en cada ficha. El footer identifica Sentinela Selknam, Gobierno de TDF y Hackathon Soberanía Tech 2026, con avisos de derechos, licencias de terceros y alcance del prototipo. El logo propuesto usa cuernos laterales y colores fueguinos, a partir de las referencias aportadas. La identidad de la demo no acredita adopción institucional. Ver [identidad y prompt del logo](primer-avance/IDENTIDAD_VISUAL.md) y [criterios para una herramienta operativa seria](CRITERIOS_DE_MADUREZ.md).
 
 ## Supabase
 

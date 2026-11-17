@@ -517,7 +517,7 @@ function App() {
   return <>
     <a className="skip-link" href="#principal">Ir al contenido</a>
     <header className="site-header">
-      <a className="brand" href="./"><img className="brand-logo" src={assetUrl('./brand/ko-taix-sentinela.png')} width="76" height="76" alt="" />
+      <a className="brand" href="./"><img className="brand-logo" src={assetUrl('./brand/ko-taix-sentinela-v2.png')} width="76" height="76" alt="" />
         <span><strong>Sentinela <span className="brand-selknam">Selknam</span></strong><span>Monitoreo de agua y vegetación</span></span>
       </a>
       {cloud && <button className="header-button" onClick={() => setLogin(true)}>
@@ -719,7 +719,18 @@ function App() {
         </details>
       </section>
     </main>
-    <footer className="government-footer"><img src={assetUrl('./brand/ko-taix-sentinela.png')} width="72" height="72" alt="Logo de Sentinela Selknam, inspirado en Ko’taix" /><strong>Gobierno de TDF</strong></footer>
+    <footer className="government-footer">
+      <div className="footer-identity">
+        <img src={assetUrl('./brand/ko-taix-sentinela-v2.png')} width="84" height="84" alt="Logo de Sentinela Selknam: Ko’taix con cuernos laterales y colores fueguinos" />
+        <div><strong>Sentinela Selknam</strong><span>Gobierno de TDF</span></div>
+      </div>
+      <p className="footer-event">Hackathon Soberanía Tech 2026</p>
+      <div className="footer-notices">
+        <p>© 2026 Sentinela Selknam. Todos los derechos reservados sobre los contenidos originales del proyecto.</p>
+        <p>Datos, cartografía y dependencias de terceros bajo sus respectivas licencias.</p>
+        <p>Prototipo demostrativo. Resultados orientativos que requieren revisión y validación en campo.</p>
+      </div>
+    </footer>
 
     <dialog ref={discardDialog} onClose={() => setPendingSelection(null)} aria-labelledby="discard-title">
       <h2 id="discard-title">Tu comentario todavía no está guardado</h2>
