@@ -24,6 +24,8 @@ Entrar a la dirección Local que muestra Vite. Para distribuir como sitio estát
 
 Las consultas nuevas necesitan Internet, CORS del catálogo y del almacenamiento satelital, Web Workers, OffscreenCanvas y Web Crypto en un navegador moderno sobre HTTPS o localhost. El archivo HTML único conserva el piloto; la apertura directa file:// continúa sin comprobar. La selección cartográfica usa un contorno IGN generalizado para orientación y no representa una cobertura previamente procesada.
 
+La carga muestra una barra de 0 a 100 %, con etapa actual y animación de actividad. Durante el procesamiento el porcentaje es una estimación acotada por los hitos reales del Worker; no representa bytes transferidos ni un plazo. La estimación avanza suavemente dentro de cada etapa, se detiene por debajo del 100 % y termina cuando ambas imágenes están cargadas. Cancelar reinicia el indicador. Los errores no muestran una finalización exitosa. La carga del piloto y de las imágenes ya preparadas también tiene indicador; se respeta la preferencia de movimiento reducido.
+
 La interfaz usa texto base de 18 px, botones de al menos 50 px de alto y una paleta azul, naranja y blanca inspirada en Tierra del Fuego. La tipografía Atkinson Hyperlegible Next se incluye localmente bajo su [licencia SIL OFL](src/fonts/OFL.txt).
 
 La lista ofrece una alternativa textual al mapa. Las escenas se comparan con máscara común y grilla UTM 19 Sur. Las capas pueden solaparse. Las señales requieren revisión y evidencia para atribuir una causa. Los umbrales son exploratorios.

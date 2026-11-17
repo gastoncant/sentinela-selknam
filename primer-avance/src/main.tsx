@@ -10,6 +10,7 @@ import { CropSelector, shortcuts } from './CropSelector';
 import CropWorker from './crop.worker?worker&inline';
 import type { Analysis } from './crop-types';
 import { loadCrops, storeCrop } from './crop-cache';
+import { LoadingProgress, progressStage } from './LoadingProgress';
 import { assetUrl } from './assets';
 
 type Properties = {
@@ -64,7 +65,7 @@ function readLocal(): Review[] {
   }
 }
 
-function SpectralMap({ features, selected, onSelect, signal, swipe, show, extent, view, reset, beforeUrl, afterUrl }: {
+function SpectralMap({ features, selected, onSelect, signal, swipe, show, extent, view, reset, beforeUrl, afterUrl, onImageProgress, onImageError }: {
   features: Candidate[];
   selected: string;
   onSelect: (id: string) => void;
@@ -73,6 +74,8 @@ function SpectralMap({ features, selected, onSelect, signal, swipe, show, extent
   show: boolean;
   extent: number[];
   beforeUrl: string; afterUrl: string;
+  onImageProgress: (percent: number) => void;
+  onImageError: () => void;
   view: View;
   reset: number;
 }) {
@@ -94,17 +97,26 @@ function SpectralMap({ features, selected, onSelect, signal, swipe, show, extent
     map.current = currentMap;
     currentMap.getPane('overlayPane')?.setAttribute('aria-hidden', 'true');
     const bounds = L.latLngBounds([extent[1], extent[0]], [extent[3], extent[2]]);
-    L.imageOverlay(beforeUrl, bounds).addTo(currentMap);
-    after.current = L.imageOverlay(afterUrl, bounds).addTo(currentMap);
+    let loaded = 0, failed = false;
+    onImageProgress(0);
+    const before = L.imageOverlay(beforeUrl, bounds);
+    const afterLayer = L.imageOverlay(afterUrl, bounds);
+    after.current = afterLayer;
+    const imageLoaded = () => { if (!failed) onImageProgress(++loaded * 50); };
+    const imageFailed = () => { failed = true; onImageError(); };
+    [before, afterLayer].forEach(layer => {
+      layer.on('load', imageLoaded); layer.on('error', imageFailed); layer.addTo(currentMap);
+    });
     currentMap.fitBounds(bounds.pad(0.04));
     const resize = new ResizeObserver(() => currentMap.invalidateSize());
     resize.observe(element.current!);
     return () => {
       resize.disconnect();
+      [before, afterLayer].forEach(layer => { layer.off('load', imageLoaded); layer.off('error', imageFailed); });
       currentMap.remove();
       map.current = null;
     };
-  }, [extent, beforeUrl, afterUrl]);
+  }, [extent, beforeUrl, afterUrl, onImageProgress, onImageError]);
 
   useEffect(() => {
     const currentMap = map.current!;
@@ -212,12 +224,22 @@ function App() {
   const [center, setCenter] = useState<[number, number]>(shortcuts[1].center);
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState('');
+  const [progressPercent, setProgressPercent] = useState(0);
+  const progressCeiling = useRef(0);
+  const imageProgressBase = useRef(0);
+  const [imagesLoading, setImagesLoading] = useState(false);
+  const [pilotLoadPercent, setPilotLoadPercent] = useState(0);
+  const [pilotLoading, setPilotLoading] = useState(true);
   const [cropError, setCropError] = useState('');
   const [recent, setRecent] = useState<Analysis[]>([]);
   const [cacheNotice, setCacheNotice] = useState('');
   const cloudForRun = pilot?.id === 'pilot' ? cloud : null;
 
-  function showAnalysis(analysis: Analysis) {
+  function showAnalysis(analysis: Analysis, fromProcessing = false) {
+    setError('');
+    imageProgressBase.current = fromProcessing ? 96 : 0;
+    setProgressPercent(imageProgressBase.current); setImagesLoading(true);
+    setProgress('Preparando las imágenes para comparar…');
     activeRun.current = analysis.id;
     setPilot(analysis); setScope('pilot'); setSelected(''); setReason('');
     setStatus(''); setSaved(false); setPage(1); setSignal('todas'); setView('compare');
@@ -229,16 +251,38 @@ function App() {
   function requestCatalog() {
     if (saving.current || processing) return;
     if (reason.trim()) { setPendingSelection('@catalog'); return; }
+    setImagesLoading(false); setProgressPercent(0);
     setScope('province');
   }
-  function cancelProcessing() {
+  function stopWorker() {
     if (worker.current) { worker.current.onmessage = null; worker.current.onerror = null; worker.current.terminate(); }
     worker.current = null;
-    clearTimeout(timeout.current); setProcessing(false); setProgress('');
+    clearTimeout(timeout.current); setProcessing(false);
   }
+  function cancelProcessing() {
+    stopWorker(); setProgressPercent(0); setProgress('');
+  }
+  const onImageProgress = useCallback((percent: number) => {
+    setImagesLoading(percent < 100);
+    setProgressPercent(imageProgressBase.current + (100 - imageProgressBase.current) * percent / 100);
+    setProgress(percent === 100 ? 'Listo. Ya podés comparar las imágenes.' : 'Preparando las imágenes para comparar…');
+  }, []);
+  const onImageError = useCallback(() => {
+    setImagesLoading(false); setProgressPercent(0);
+    setError('No pudimos cargar una de las imágenes. Revisá la conexión y volvé a abrir este recorte.');
+  }, []);
+  useEffect(() => {
+    if (!processing) return;
+    const timer = setInterval(() => setProgressPercent(previous => {
+      const ceiling = progressCeiling.current;
+      return previous < ceiling ? Math.max(previous, Math.min(ceiling - 0.1, previous + (ceiling - previous) * 0.06)) : previous;
+    }), 400);
+    return () => clearInterval(timer);
+  }, [processing]);
   function startCrop() {
     if (processing) return;
-    setCropError(''); setProcessing(true); setProgress('Preparando la consulta del recorte…');
+    setCropError(''); setProcessing(true); setImagesLoading(false); setProgressPercent(0);
+    progressCeiling.current = 3; setProgress('Preparando la consulta del recorte…');
     const current = new CropWorker(); worker.current = current;
     timeout.current = setTimeout(() => {
       cancelProcessing(); setCropError('La descarga está tardando demasiado. Podés volver a intentar o abrir el piloto ya preparado.');
@@ -246,9 +290,13 @@ function App() {
     current.onerror = () => { cancelProcessing(); setCropError('No pudimos ejecutar la comparación en este navegador. Volvé a intentar o abrí el piloto preparado.'); };
     current.onmessage = event => {
       const data = event.data;
-      if (data.type === 'progress') { setProgress(data.message); return; }
-      cancelProcessing();
-      if (data.type === 'error') { setCropError(data.message + ' El piloto preparado sigue disponible.'); return; }
+      if (data.type === 'progress') {
+        const [floor, ceiling] = progressStage(data.message);
+        progressCeiling.current = Math.max(progressCeiling.current, ceiling);
+        setProgressPercent(previous => Math.max(previous, floor)); setProgress(data.message); return;
+      }
+      stopWorker();
+      if (data.type === 'error') { setProgressPercent(0); setCropError(data.message + ' El piloto preparado sigue disponible.'); return; }
       if (data.type !== 'result') return;
       const beforeUrl = URL.createObjectURL(data.before), afterUrl = URL.createObjectURL(data.after);
       createdUrls.current.push(beforeUrl, afterUrl);
@@ -258,7 +306,7 @@ function App() {
       const { beforeUrl: _before, afterUrl: _after, ...metadata } = analysis;
       void storeCrop({ ...metadata, before: data.before, after: data.after, opened: Date.now() })
         .catch(() => setCacheNotice('No se pudo conservar este recorte en el dispositivo. Podés descargar sus imágenes y datos antes de cerrar.'));
-      showAnalysis(analysis);
+      showAnalysis(analysis, true);
     };
     current.postMessage({ center });
   }
@@ -310,10 +358,13 @@ function App() {
 
   useEffect(() => {
     const controller = new AbortController();
+    let loaded = 0;
     Promise.all(['manifest.json', 'candidates.geojson'].map(async name => {
       const response = await fetch(assetUrl('./pilot/' + name), { signal: controller.signal });
       if (!response.ok) throw Error('No se pudo abrir el producto ' + name);
-      return response.json();
+      const result = await response.json();
+      if (!controller.signal.aborted) setPilotLoadPercent(++loaded * 50);
+      return result;
     })).then(([manifest, data]) => {
       const original: Analysis = { id: 'pilot', label: 'Piloto costero · 1,92 × 1,92 km',
         beforeUrl: assetUrl('./pilot/before.png'), afterUrl: assetUrl('./pilot/after.png'), manifest, features: data.features };
@@ -322,7 +373,7 @@ function App() {
     })
       .catch(failure => {
         if (failure.name !== 'AbortError') setError('No pudimos cargar las imágenes. Revisá la conexión y volvé a intentar.');
-      });
+      }).finally(() => { if (!controller.signal.aborted) setPilotLoading(false); });
     return () => controller.abort();
   }, []);
 
@@ -489,6 +540,8 @@ function App() {
         <button aria-pressed={scope === 'pilot'} onClick={() => setScope('pilot')} disabled={!pilot || processing}>Volver al análisis abierto</button>
       </div>
 
+      <LoadingProgress active={imagesLoading} percent={processing ? 0 : progressPercent} label={progress} />
+
       {scope === 'province' ? <div className="workbench crop-workbench">
         <section className="comparison" aria-labelledby="selector-title">
           <div className="section-heading"><span className="step" aria-hidden="true">1</span><div>
@@ -505,10 +558,14 @@ function App() {
           <dl className="crop-spec"><dt>Área del recorte</dt><dd>5,12 × 5,12 km</dd><dt>Detalle del análisis</dt><dd>10 metros · Sentinel-2</dd><dt>Períodos</dt><dd>Enero–marzo de 2020 y de 2026</dd></dl>
           <p className="crop-coordinate">Centro: {center[1].toFixed(4)}°, {center[0].toFixed(4)}°</p>
           <button className="save-button" onClick={startCrop} disabled={processing}>{processing ? 'Preparando la comparación…' : 'Comparar este recorte →'}</button>
-          {processing && <div className="processing-state" role="status"><p>{progress}</p><p>La primera descarga puede tardar varios minutos. Podés cancelarla.</p><button onClick={cancelProcessing}>Cancelar descarga</button></div>}
+          {processing && <div className="processing-state">
+            <LoadingProgress active percent={progressPercent} label={progress} estimated />
+            <p>La primera descarga puede tardar varios minutos. Podés cancelarla.</p><button onClick={cancelProcessing}>Cancelar descarga</button></div>}
           {cropError && <p className="error-message" role="alert">{cropError}</p>}
           <p className="scientific-note">Se comparan únicamente los píxeles válidos en ambas fechas. Las nubes y la falta de observaciones pueden impedir el análisis. Un cambio necesita revisión para atribuirlo a castores.</p>
-          <div className="prepared-pilot"><h3>Probar un recorte ya preparado</h3><p>Piloto costero · 3,69 km² · 200 zonas de cambio</p><button onClick={openPilot} disabled={!originalPilot.current || processing}>Abrir piloto preparado →</button></div>
+          <div className="prepared-pilot"><h3>Probar un recorte ya preparado</h3><p>Piloto costero · 3,69 km² · 200 zonas de cambio</p>
+            <LoadingProgress active={pilotLoading} percent={pilotLoadPercent} label={pilotLoadPercent === 100 ? 'Piloto preparado.' : 'Cargando los datos del piloto…'} />
+            <button onClick={openPilot} disabled={!originalPilot.current || processing}>Abrir piloto preparado →</button></div>
           {recent.length > 0 && <div className="recent-crops"><h3>Recortes de este dispositivo</h3><p>Se conservan hasta seis comparaciones para volver a abrirlas.</p>{recent.map(item => <button key={item.id} onClick={() => showAnalysis(item)} disabled={processing}>{item.manifest.center[1].toFixed(3)}°, {item.manifest.center[0].toFixed(3)}° · {item.features.length} zonas →</button>)}</div>}
           {cacheNotice && <p role="status">{cacheNotice}</p>}
         </aside>
@@ -529,12 +586,13 @@ function App() {
             <div className="map-wrap">
               {pilot ? <SpectralMap key={pilot.id} features={features} selected={selected} onSelect={requestSelection} signal={signal}
                 swipe={swipe} show={show} extent={pilot.manifest.bounds_m} view={view} reset={reset}
-                beforeUrl={pilot.beforeUrl} afterUrl={pilot.afterUrl} />
+                beforeUrl={pilot.beforeUrl} afterUrl={pilot.afterUrl} onImageProgress={onImageProgress} onImageError={onImageError} />
                 : <p className="loading" role="status">Cargando imágenes y zonas…</p>}
               {view === 'compare' && <div className="curtain-line" style={{ left: swipe + '%' }} aria-hidden="true"><span>↔</span></div>}
               <span className="north" aria-hidden="true">N ↑</span>
               {chosen && <p className="map-selection">{zoneName(chosen)} · contorno blanco</p>}
             </div>
+            {error && pilot && <p className="error-message" role="alert">{error}</p>}
             {view === 'compare' && <div className="slider-control">
               <label htmlFor="swipe">Mové el control para comparar las imágenes</label>
               <div><span>2020</span><input id="swipe" type="range" min="0" max="100" value={swipe}
@@ -645,7 +703,7 @@ function App() {
       <p>Podés volver a la ficha para guardarlo, o salir y descartar lo que escribiste.</p>
       <button className="save-button" onClick={() => setPendingSelection(null)} autoFocus>Seguir escribiendo</button>
       <button className="dialog-close" onClick={() => {
-        if (pendingSelection === '@catalog') { setReason(''); setScope('province'); }
+        if (pendingSelection === '@catalog') { setReason(''); setImagesLoading(false); setProgressPercent(0); setScope('province'); }
         else if (pendingSelection !== null) select(pendingSelection);
         setPendingSelection(null);
       }}>Descartar comentario y salir</button>

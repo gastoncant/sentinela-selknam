@@ -27,6 +27,10 @@ Un segundo recorte en −68,05°, −53,55° generó 130 componentes con 99,6 % 
 
 Las pruebas de PostgreSQL embebido siguen cubriendo el piloto original y sus 200 candidatos. El SQL actual no importa ejecuciones nuevas: sus revisiones se mantienen locales. Persistencia compartida, validación ambiental, lectores de pantalla y rendimiento con conectividad limitada siguen pendientes. La compilación avisa que el paquete JS supera 500 kB, con aproximadamente 330 kB gzip, al incorporar el lector COG y el Worker.
 
+## Indicadores de carga
+
+En el navegador sobre la compilación se verificó la carga inicial del piloto (50 %), una comparación nueva con avance visible entre búsqueda y lectura de escenas (4 % a 54 %), la apertura correcta del resultado y la cancelación inmediata con retirada del indicador y controles habilitados. Al abrir el piloto preparado, la barra llegó al 100 % después de cargar las dos imágenes. No se registraron errores JavaScript durante la comparación. Los porcentajes del proceso son estimaciones por etapas; la animación no cambia el código científico del Worker ni la identidad de sus productos, y la revisión local de la ejecución existente se conservó.
+
 ## Reproducir el análisis del piloto
 
 Desde un entorno Python 3.12 con Rasterio, NumPy y Pillow instalados:
