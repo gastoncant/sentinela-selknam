@@ -27,3 +27,4 @@ jobs:
       - run: npm run build
       - run: node verify-db.mjs
       - run: node verify-province.mjs
+      - run: node verify-crop.mjs

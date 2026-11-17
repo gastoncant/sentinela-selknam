@@ -25,12 +25,16 @@ Demo pública para el jurado
 https://gastoncant.github.io/sentinela-selknam/
 
 Recorrido sugerido de presentación
-1. Comparar las dos fechas en el mapa de la Isla Grande.
-2. Abrir el piloto de 10 metros desde el botón de análisis disponibles.
-3. Filtrar agua o vegetación y elegir una zona para revisar.
-4. Guardar un ensayo local con un motivo.
-5. Abrir trazabilidad y descargar geometrías.
-6. Mostrar ARQUITECTURA_OBJETIVO.md para explicar las siguientes etapas.
+1. Elegir un lugar dentro del contorno de la Isla Grande o una zona de acceso rápido.
+2. Presionar Comparar este recorte y esperar la lectura de escenas Sentinel-2.
+3. Comparar las fechas efectivas, cobertura válida y cambios de agua o vegetación.
+4. Elegir una zona y guardar una revisión local con motivo.
+5. Descargar imágenes, GeoJSON y fuentes del recorte abierto.
+6. Reabrir un recorte conservado en el dispositivo o usar el piloto preparado.
+
+Los recortes nuevos requieren Internet y navegador moderno sobre HTTPS o
+localhost. No crean recursos AWS en la cuenta del usuario. El piloto incluido
+permite ensayar el recorrido sin descargar nuevas escenas.
 
 Estado real
 Las escenas y los resultados espectrales son reales.
@@ -39,8 +43,8 @@ El cliente Supabase y su SQL están implementados y probados en PostgreSQL
 embebido. Falta configurar la cuenta Supabase remota y repetir la prueba
 de autenticación y persistencia compartida.
 
-La vista de la isla usa MODIS de 250 m nativos como reconocimiento.
-Los cambios calculados de 10 m corresponden solamente al piloto.
-El procesamiento del sector argentino por áreas y los avisos con SNS,
-correo, Slack y WhatsApp están documentados como trabajo pendiente en
-ARQUITECTURA_OBJETIVO.md. No hay alertas externas activas.
+Los recortes nuevos usan una grilla de 10 m y ventanas enero-marzo de 2020
+y 2026. La cobertura y las fechas dependen de las escenas disponibles.
+No representan detecciones confirmadas de castores. La arquitectura futura
+y los avisos SNS se documentan en ARQUITECTURA_OBJETIVO.md, sin controles
+de alertas en la aplicación actual.

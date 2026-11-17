@@ -1,4 +1,4 @@
-"""Freeze NASA regional previews and a generalized IGN provincial outline."""
+"""Reproduce the generalized IGN island reference used by the crop selector."""
 import argparse
 import hashlib
 import json
@@ -14,10 +14,7 @@ BOUNDARY_URL = (
     "&typeNames=ign:provincia&outputFormat=application/json&srsName=EPSG:4326"
     "&CQL_FILTER=in1%3D%2794%27"
 )
-WMS = "https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi"
-LAYER = "MODIS_Terra_CorrectedReflectance_TrueColor"
 REGIONS = [("fueguino", "Isla Grande de Tierra del Fuego", [-71.5, -55.25, -65, -52.35])]
-DATES = ["2020-02-08", "2026-03-13"]
 
 def normalize_coordinates(coordinates):
     if isinstance(coordinates[0], (int, float)):
@@ -72,39 +69,16 @@ def main(boundary_file):
     ]
     (out/"places.json").write_text(json.dumps(places, ensure_ascii=False), encoding="utf8")
     manifest = dict(
-        product="Vista regional de reconocimiento",
-        provider="NASA GIBS", layer=LAYER, native_resolution_m=250,
-        dates=DATES, projection="EPSG:4326",
+        product="Selector de recortes · sector argentino de Isla Grande",
+        projection="EPSG:4326",
         boundary=dict(url=BOUNDARY_URL, raw_sha256=hashlib.sha256(raw).hexdigest(),
                       display_tolerance_degrees=0.004, purpose="Contorno argentino de Isla Grande para orientación",
-                      selection="Mayor polígono terrestre conectado dentro del encuadre insular",
-                      pole_normalization="Recorte a 90 grados para errores de redondeo menores de 0,000001 grados"),
+                      selection="Mayor polígono terrestre conectado dentro del encuadre insular"),
         places=dict(url=places_url, raw_sha256=hashlib.sha256(places_raw).hexdigest()),
-        regions=[], hashes={},
-        limits=[
-            "Las imágenes diarias pueden contener nubes, sombras y áreas sin observación.",
-            "Las vistas regionales no calculan candidatos ni métricas de castores.",
-            "Las miniaturas están remuestreadas. El servicio remoto conserva su detalle disponible.",
-        ],
+        hashes={filename:hashlib.sha256((out/filename).read_bytes()).hexdigest() for filename in ("boundary.geojson","places.json")},
+        limits=["Contorno generalizado para orientación; la selección no representa una cobertura analizada.",
+                "Cada recorte Sentinel-2 registra sus propias escenas, fechas, parámetros y cobertura."],
     )
-    for key, label, bbox in REGIONS:
-        frames = []
-        for date, suffix in zip(DATES, ("before", "after")):
-            params = dict(service="WMS", version="1.1.1", request="GetMap", layers=LAYER,
-                          styles="", format="image/jpeg", srs="EPSG:4326",
-                          bbox=",".join(map(str, bbox)), width=1200, height=850, time=date)
-            url = WMS + "?" + urllib.parse.urlencode(params)
-            filename = f"{key}-{suffix}.jpg"
-            image = fetch(url, 8_000_000)
-            if not image.startswith(b"\xff\xd8"):
-                raise ValueError("El proveedor no devolvió un JPEG: " + filename)
-            (out/filename).write_bytes(image)
-            frames.append(dict(date=date, file=filename, url=url))
-            print(filename, len(image), flush=True)
-        manifest["regions"].append(dict(id=key, name=label, bbox=bbox, frames=frames))
-    files = ["boundary.geojson", "places.json"] + [frame["file"] for region in manifest["regions"] for frame in region["frames"]]
-    for filename in files:
-        manifest["hashes"][filename] = hashlib.sha256((out/filename).read_bytes()).hexdigest()
     (out/"manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf8")
 
 if __name__ == "__main__":

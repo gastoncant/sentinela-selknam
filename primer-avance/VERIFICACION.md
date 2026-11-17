@@ -15,13 +15,17 @@ Se simplificó el recorrido a comparar imágenes, elegir una zona y guardar una 
 
 En una ventana de 390 × 844 se verificó ausencia de desbordamiento horizontal, texto base de 18 px y botones principales con alturas entre 50 y 84 px. Los contrastes calculados son 12,85 para texto principal sobre blanco, 6,78 para texto secundario, 6,31 para texto blanco en el botón azul y 9,12 para la confirmación de guardado. Son controles puntuales de la implementación. Sigue pendiente una evaluación con usuarios del perfil previsto y lector de pantalla.
 
-## Ampliación a la Isla Grande y arquitectura de alertas
+## Recortes Sentinel-2 bajo demanda
 
-La compilación TypeScript/Vite y las pruebas de permisos de PostgreSQL embebido pasaron después de incorporar el mapa insular. `node verify-province.mjs` comprobó las dos fechas, firmas JPEG, diferencias entre imágenes, hashes, coordenadas, contorno argentino limitado a un polígono de la Isla Grande y localidades dentro del encuadre. El mapa se contrastó con las imágenes descargadas de NASA y el contorno IGN; conserva su procedencia en el manifiesto. No se incluyeron otros sectores territoriales.
+Se sustituyó el comparador MODIS regional por un selector de áreas que abre comparaciones detalladas de Sentinel-2. Se retiró de la interfaz la sección de alertas y su enlace; SNS queda en la documentación de arquitectura futura.
 
-En el navegador sobre la compilación HTTP se verificaron el encuadre insular, ambas fechas, la cortina con teclado, el acceso al piloto de 10 m y el retorno al mapa. Se conservaron las revisiones locales del piloto. No se registraron errores JavaScript durante ese recorrido. En 390 × 844, el documento midió 375 px de ancho y los botones de vista y fecha entre 54 y 96 px de alto, sin desbordamiento horizontal. Sigue pendiente la evaluación con operadores y lector de pantalla.
+`node verify-crop.mjs` comprueba grilla y alineación, índices, denominadores, nodata, nubes, conectividad de cuatro vecinos, ruido menor de cuatro celdas, aislamiento de identificadores y conservación de superficies y huecos. La compilación incluye el procesador en un Worker independiente y no requiere un servidor de análisis.
 
-El comparador general es un producto MODIS de reconocimiento de 250 m nativos, con imágenes diarias que pueden incluir nubes y observaciones incompletas. No amplía los 200 componentes del piloto a toda la isla. La arquitectura objetivo documenta Supabase, procesamiento por sectores, AWS, SNS y adaptadores por canal. Son pasos propuestos: no se desplegaron esos servicios ni se enviaron alertas externas. La compilación conserva el aviso de tamaño del paquete JS (aproximadamente 171 kB gzip); falta medir rendimiento en conexiones representativas.
+El navegador procesó el centro −67,65°, −54,48° con escenas S2A_19FEV_20200208_1_L2A y S2A_19FEV_20260313_1_L2A. El resultado final usó 243.104 de 262.144 píxeles (92,7 %) y produjo 185 componentes de agua y 471 de vegetación. El contraste Python/Rasterio sobre las mismas escenas reprodujo cobertura, conteos y los ocho hashes de bandas muestreadas. Durante la revisión se corrigió una diferencia en el umbral causada por redondeo float32; las bandas e índices finales usan float64. Son señales exploratorias; no se validó su causa biológica.
+
+Un segundo recorte en −68,05°, −53,55° generó 130 componentes con 99,6 % de cobertura común. Se verificó la reapertura del recorte central desde IndexedDB después de recargar, el guardado de una revisión propia y la conservación de un comentario al cancelar el cambio de área. La revisión del recorte central no apareció en la zona homónima del norte. No se registraron errores JavaScript en esos recorridos. En 390 × 844, el documento midió 375 px de ancho, sin desbordamiento horizontal. Se comprobó la ausencia de la sección de alertas en el contenido de la aplicación.
+
+Las pruebas de PostgreSQL embebido siguen cubriendo el piloto original y sus 200 candidatos. El SQL actual no importa ejecuciones nuevas: sus revisiones se mantienen locales. Persistencia compartida, validación ambiental, lectores de pantalla y rendimiento con conectividad limitada siguen pendientes. La compilación avisa que el paquete JS supera 500 kB, con aproximadamente 330 kB gzip, al incorporar el lector COG y el Worker.
 
 ## Reproducir el análisis del piloto
 

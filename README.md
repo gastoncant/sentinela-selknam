@@ -2,7 +2,7 @@
 
 Primer avance de un tablero ambiental para Tierra del Fuego. La demo actual usa React, TypeScript y Leaflet, con integración Supabase preparada para autenticación y revisión compartida.
 
-El mapa de la Isla Grande de Tierra del Fuego permite comparar dos fechas con imágenes regionales NASA GIBS y el contorno del sector argentino. El análisis Sentinel-2 de 10 metros sigue disponible en el recorte piloto. La [arquitectura objetivo y hoja de ruta](ARQUITECTURA_OBJETIVO.md) detalla el procesamiento del sector argentino de la isla y las alertas con SNS, correo, Slack y WhatsApp.
+La aplicación permite seleccionar un punto del sector argentino de la Isla Grande y comparar un recorte de 5,12 × 5,12 km con Sentinel-2 a 10 m. Busca observaciones de enero–marzo de 2020 y 2026, lee las bandas necesarias y calcula cambios de agua y vegetación en el navegador. El piloto preparado sigue disponible para una presentación inmediata. La [arquitectura objetivo](ARQUITECTURA_OBJETIVO.md) conserva la futura implementación institucional y las alertas.
 
 ## Descargar y ejecutar la demo
 
@@ -28,12 +28,13 @@ npm run build
 npm run preview
 ```
 
-La carpeta **docs/** incluye una compilación lista para servir desde un hosting estático. La carpeta **primer-avance/dist/** se genera con el comando de compilación. La interfaz usa imágenes y geometrías incluidas en el repositorio. La instalación inicial necesita acceso a npm.
+La carpeta **docs/** incluye una compilación lista para servir desde un hosting estático. La carpeta **primer-avance/dist/** se genera con el comando de compilación. El piloto usa imágenes y geometrías incluidas. Los recortes nuevos requieren conexión con Earth Search y los COG públicos de Sentinel-2. La instalación inicial necesita acceso a npm.
 
 ## Qué demuestra
 
 - Comparación de dos observaciones reales de Sentinel-2 con cortina temporal.
-- Comparación regional NASA GIBS de la Isla Grande con contorno argentino oficial IGN.
+- Selección de recortes en la isla y procesamiento Sentinel-2 bajo demanda, con fechas efectivas y cobertura común.
+- Hasta seis recortes conservados en el dispositivo para reabrirlos sin volver a descargar sus bandas.
 - Selección de polígonos en el mapa o en una lista, con filtros por agua y vegetación.
 - Fichas con superficie, índices y procedencia.
 - Ensayos de revisión guardados en el navegador.
@@ -45,7 +46,7 @@ El recorte costero tiene 69 componentes de agua y 131 de vegetación, con 95,68 
 
 La demo arranca sin variables de entorno y permite ensayar el recorrido. Las revisiones de ese modo se guardan en el navegador del visitante.
 
-Para la revisión compartida, configurar un proyecto Supabase con los scripts y pasos de [primer-avance/README.md](primer-avance/README.md#conectar-supabase-free). El cliente, las políticas RLS y la función de revisión están implementados. La cuenta Supabase remota sigue pendiente de configuración.
+Para la revisión compartida, configurar un proyecto Supabase con los scripts y pasos de [primer-avance/README.md](primer-avance/README.md#conectar-supabase-free). El cliente, las políticas RLS y la función de revisión están implementados. La cuenta Supabase remota sigue pendiente de configuración. El SQL actual cubre el piloto: los recortes nuevos conservan sus revisiones localmente hasta implementar e importar ejecuciones versionadas.
 
 El frontend admite únicamente la URL y la clave publicable del proyecto. Las claves secretas y las credenciales de base de datos se mantienen fuera del navegador y de Git.
 

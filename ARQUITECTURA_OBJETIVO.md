@@ -4,30 +4,32 @@
 
 El objetivo es que un equipo ambiental pueda recorrer el sector argentino de la Isla Grande de Tierra del Fuego, comparar observaciones, revisar cambios de agua y vegetación y dar seguimiento a zonas que merecen comprobación. El sistema debe conservar las fuentes, las decisiones y sus responsables. Las intervenciones en territorio corresponden a las autoridades y equipos competentes.
 
-El alcance acordado es la Isla Grande de Tierra del Fuego. La comparación general muestra la isla y su entorno inmediato, con el contorno argentino como referencia. El procesamiento operativo previsto se limita al sector argentino; el resto de la imagen aporta contexto geográfico. El mapa abre directamente esta vista y permite acercar el piloto de 10 metros.
+El alcance acordado es la Isla Grande de Tierra del Fuego. El mapa funciona como selector de un recorte rectangular de 5,12 × 5,12 km. La aplicación busca y procesa observaciones Sentinel-2 en el navegador y abre el mismo recorrido de comparación y revisión del piloto. La cobertura se consulta bajo demanda; no existe todavía un mosaico completo analizado ni una validación ambiental de toda la isla.
 
 ## Estado real de construcción
 
 | Capacidad | Estado verificable | Trabajo pendiente |
 | --- | --- | --- |
-| Comparación regional | Dos fechas NASA GIBS, comparador y contorno IGN | Selección de ventanas y productos según necesidad operativa |
-| Detalle Sentinel-2 | Recorte real de 3,69 km², grilla de 10 m, 200 componentes exploratorios | Procesamiento del sector argentino de la isla por sectores y validación independiente |
+| Recortes bajo demanda | Selección de punto, COG Sentinel-2, procesamiento 10 m en Worker, comparación, fichas y descarga | Publicación compartida, procesamiento institucional y ventanas configurables |
+| Piloto preparado | Recorte real de 3,69 km², grilla de 10 m, 200 componentes exploratorios | Validación independiente y calibración |
 | Interfaz | Recorrido guiado, lista, ficha, motivo y guardado de prueba | Evaluación con operadores y lector de pantalla |
 | Supabase | Cliente Auth y SQL con RLS y revisión transaccional, probado en PostgreSQL embebido | Configurar proyecto remoto y probar con cuentas reales |
-| Persistencia de demostración | Revisiones locales del navegador | Historial compartido, auditoría y copias remotas |
+| Persistencia de demostración | Revisiones locales y hasta seis recortes en IndexedDB | Historial compartido, auditoría y copias remotas |
 | Publicación | GitHub Pages y código descargable | Entornos separados, despliegue institucional y operación |
 | Alertas | Arquitectura y etapas definidas aquí | Outbox, reglas, bandeja, adaptadores y destinatarios |
 | AWS | Plantilla inicial Lightsail del prototipo anterior | Desplegar y probar la arquitectura administrada propuesta |
 
-La cobertura de detección acreditada sigue siendo el piloto. Los demás sectores requieren ejecuciones propias, con estados de observación y procesamiento visibles.
+El piloto se conserva como producto preparado. Los nuevos recortes generan sus propias ejecuciones locales y geometrías con fechas, cobertura y trazabilidad. La validación biológica sigue pendiente. La aplicación no afirma que los cambios sean diques ni presencia confirmada de castores.
 
 ## Fuentes y alcance territorial
 
-La vista regional usa MODIS Terra Corrected Reflectance True Color mediante NASA GIBS. Las fechas son 8 de febrero de 2020 y 13 de marzo de 2026. El producto tiene 250 m nativos. Las vistas guardadas están remuestreadas para agilizar la carga. La cobertura varía con nubes, sombras, iluminación y observaciones disponibles. Esta vista permite reconocer el territorio y explorar su apariencia. [Servicios y dimensión temporal de GIBS](https://nasa-gibs.github.io/gibs-api-docs/access-basics/)
+Los recortes consultan Earth Search y leen COG Sentinel-2 L2A desde almacenamiento público. Se buscan observaciones entre enero y marzo de 2020 y 2026 y se seleccionan escenas utilizables según SCL, con búsqueda acotada. Se muestran fechas efectivas, superficie común y píxeles excluidos. Los índices y componentes se calculan sobre 10 m; SCL procede de 20 m. El método y sus límites se detallan en [primer-avance/README.md](primer-avance/README.md#método-de-los-recortes-bajo-demanda). [Earth Search](https://github.com/element84/earth-search)
 
-El contorno procede de IGN WFS, capa ign:provincia, código 94. Se seleccionó el mayor polígono terrestre conectado dentro del encuadre de la Isla Grande. Se generalizó para pantalla con una tolerancia de 0,004 grados y se usa como referencia de navegación. Las áreas del algoritmo se calculan con su geometría y grilla de análisis. El script build_province_assets.py registra el hash de la descarga original. El manifiesto conserva las URL de las imágenes y sus hashes. Los rótulos de localidades proceden de Georef. [IGN WFS](https://wms.ign.gob.ar/geoserver/ows?service=WFS&request=GetCapabilities), [Georef](https://apis.datos.gob.ar/georef/api/localidades?provincia=94&max=100)
+La fase actual realiza el cómputo en un Worker del navegador y conserva hasta seis recortes en IndexedDB, sujeto a cuota o borrado del dispositivo. Esto permite explorar otras zonas sin un servidor de análisis. El catálogo y los COG requieren conectividad y CORS; el piloto preparado permanece como alternativa. La operación institucional requiere centralizar ejecuciones, productos y revisiones con permisos, respaldo y supervisión. Los identificadores incluyen grilla, escenas y hash del método para aislar las revisiones de cada resultado.
 
-Para calcular candidatos en el sector argentino de la isla se requiere un catálogo de áreas y ejecuciones Sentinel-2 L2A. La inferencia ambiental necesita resolución, máscaras, fechas comparables y evidencia adecuadas a cada ambiente. Los umbrales del piloto siguen siendo exploratorios.
+El contorno procede de IGN WFS, capa ign:provincia, código 94. Se seleccionó el mayor polígono terrestre conectado dentro del encuadre de la Isla Grande. Se generalizó para pantalla con una tolerancia de 0,004 grados y se usa como referencia de navegación. Las áreas del algoritmo se calculan con su geometría y grilla de análisis. El manifiesto del selector conserva la fuente y hash del contorno original y de sus recursos. Los manifiestos de cada recorte conservan los insumos satelitales y sus hashes. Los rótulos de localidades proceden de Georef. [IGN WFS](https://wms.ign.gob.ar/geoserver/ows?service=WFS&request=GetCapabilities), [Georef](https://apis.datos.gob.ar/georef/api/localidades?provincia=94&max=100)
+
+Para publicar y compartir los candidatos calculados en el sector argentino de la isla se requiere un catálogo institucional de áreas y ejecuciones Sentinel-2 L2A. La inferencia ambiental necesita resolución, máscaras, fechas comparables y evidencia adecuadas a cada ambiente. Los umbrales del piloto siguen siendo exploratorios.
 
 ## Producto operativo previsto
 
@@ -121,7 +123,9 @@ Se deben distinguir calidad de observación, confianza del método, prioridad op
 
 Se requieren índices por organización, área, estado, fecha y geometría según consultas medidas. Listas y exportaciones grandes llevan paginación, límites y autorización. La identidad de una ejecución combina área y versión, períodos, método, parámetros y versión de datos.
 
-## Alertas ambientales y de operación
+## Alertas ambientales y de operación (implementación futura)
+
+SNS y los canales de avisos pertenecen a esta arquitectura futura. La aplicación actual no incluye una sección de alertas ni controles para configurar o enviar mensajes.
 
 Los primeros disparadores propuestos son candidatos pendientes tras un análisis completado, cobertura insuficiente y fallos técnicos de procesamiento o entrega. Cada uno tiene destinatarios y condiciones propios.
 

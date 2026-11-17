@@ -82,9 +82,6 @@ summary { cursor: pointer; font-weight: 600; min-height: 50px; padding: 13px 16p
 .pilot-key { display: inline-block; width: 15px; height: 15px; border-radius: 50%; background: #08649e; box-shadow: 0 0 0 2px white, 0 0 0 3px #08649e; margin: 0 5px; }
 .available-analysis { padding: 17px; border: 1px solid #bbcddc; background: #f0f6fb; border-radius: 5px; }
 .available-analysis p { font-size: 0.95rem; }
-.alert-plan { margin-top: 24px; padding-top: 22px; border-top: 1px solid #c4d1dc; }
-.alert-plan p, .alert-plan a { font-size: 0.95rem; line-height: 1.5; }
-.alert-plan a { display: inline-block; padding: 10px 0; min-height: 48px; }
 .workbench { display: grid; grid-template-columns: minmax(0, 1fr) 420px; align-items: start; gap: 24px; }
 .comparison, .review-panel { background: white; border: 1px solid var(--line); border-radius: 6px; }
 .comparison { overflow: hidden; }
@@ -243,3 +240,23 @@ dialog label { display: block; font-weight: 600; margin: 15px 0 8px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
 }
+
+/* The island is an area selector; the result remains the main work surface. */
+.crop-shortcuts { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 22px 18px; }
+.crop-shortcuts button { flex: 1; min-width: 125px; }
+.crop-selector { background: #edf3f6; cursor: crosshair; }
+.selector-place { color: #173e60; font: 600 15px 'Atkinson Hyperlegible Next', sans-serif; white-space: nowrap; text-shadow: 0 0 4px white, 1px 1px white; }
+.selector-message { position: absolute; bottom: 28px; left: 12px; right: 12px; z-index: 650; background: white; border-left: 4px solid #a84400; padding: 10px; font-size: 0.9rem; }
+.selector-hint { margin: 0; padding: 18px 22px; font-size: 0.95rem; }
+.crop-spec { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.98rem; }
+.crop-spec dt { color: #465e70; }
+.crop-spec dd { margin: 0; font-weight: 600; }
+.crop-coordinate { font-size: 0.9rem; color: #465e70; }
+.crop-request .section-heading { padding-left: 0; padding-right: 0; }
+.crop-request { padding-top: 0; }
+.processing-state { border-left: 4px solid #08649e; padding: 0 0 0 14px; font-size: 0.95rem; }
+.prepared-pilot, .recent-crops { border-top: 1px solid #c4d1dc; margin-top: 24px; padding-top: 22px; }
+.prepared-pilot p, .recent-crops p { font-size: 0.95rem; }
+.recent-crops button { display: block; width: 100%; margin-top: 10px; text-align: left; }
+.coverage-notice { padding: 14px 22px; margin: 0; line-height: 1.5; border-top: 1px solid #c4d1dc; background: #f1f6fa; }
+@media (max-width: 520px) { .crop-shortcuts { padding: 0 15px 15px; } .crop-shortcuts button { min-width: 90px; padding: 10px; } .crop-spec { grid-template-columns: 1fr; gap: 4px; } .crop-spec dd { margin-bottom: 12px; } }
