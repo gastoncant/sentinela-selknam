@@ -2,6 +2,8 @@
 
 Primer avance de un tablero ambiental para Tierra del Fuego. La demo actual usa React, TypeScript y Leaflet, con integración Supabase preparada para autenticación y revisión compartida.
 
+El mapa de la Isla Grande de Tierra del Fuego permite comparar dos fechas con imágenes regionales NASA GIBS y el contorno del sector argentino. El análisis Sentinel-2 de 10 metros sigue disponible en el recorte piloto. La [arquitectura objetivo y hoja de ruta](ARQUITECTURA_OBJETIVO.md) detalla el procesamiento del sector argentino de la isla y las alertas con SNS, correo, Slack y WhatsApp.
+
 ## Descargar y ejecutar la demo
 
 1. Descargar el repositorio desde **Code → Download ZIP** y descomprimirlo, o clonarlo con Git.
@@ -31,6 +33,7 @@ La carpeta **docs/** incluye una compilación lista para servir desde un hosting
 ## Qué demuestra
 
 - Comparación de dos observaciones reales de Sentinel-2 con cortina temporal.
+- Comparación regional NASA GIBS de la Isla Grande con contorno argentino oficial IGN.
 - Selección de polígonos en el mapa o en una lista, con filtros por agua y vegetación.
 - Fichas con superficie, índices y procedencia.
 - Ensayos de revisión guardados en el navegador.

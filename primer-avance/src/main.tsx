@@ -6,6 +6,8 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Feature, Polygon, MultiPolygon } from 'geojson';
 import 'leaflet/dist/leaflet.css';
 import './style.css';
+import { ProvincialMap } from './ProvincialMap';
+import { assetUrl } from './assets';
 
 type Properties = {
   id: string;
@@ -98,8 +100,8 @@ function SpectralMap({ features, selected, onSelect, signal, swipe, show, extent
     map.current = currentMap;
     currentMap.getPane('overlayPane')?.setAttribute('aria-hidden', 'true');
     const bounds = L.latLngBounds([extent[1], extent[0]], [extent[3], extent[2]]);
-    L.imageOverlay('./pilot/before.png', bounds).addTo(currentMap);
-    after.current = L.imageOverlay('./pilot/after.png', bounds).addTo(currentMap);
+    L.imageOverlay(assetUrl('./pilot/before.png'), bounds).addTo(currentMap);
+    after.current = L.imageOverlay(assetUrl('./pilot/after.png'), bounds).addTo(currentMap);
     currentMap.fitBounds(bounds.pad(0.04));
     const resize = new ResizeObserver(() => currentMap.invalidateSize());
     resize.observe(element.current!);
@@ -172,6 +174,7 @@ function SpectralMap({ features, selected, onSelect, signal, swipe, show, extent
 }
 
 function App() {
+  const [scope, setScope] = useState<'province' | 'pilot'>('province');
   const [pilot, setPilot] = useState<Pilot | null>(null);
   const [error, setError] = useState('');
   const [signal, setSignal] = useState('todas');
@@ -198,6 +201,10 @@ function App() {
   const discardDialog = useRef<HTMLDialogElement>(null);
   const reasonField = useRef<HTMLTextAreaElement>(null);
   const saving = useRef(false);
+  const openPilot = useCallback(() => {
+    setScope('pilot');
+    requestAnimationFrame(() => document.getElementById('compare-title')?.focus());
+  }, []);
 
   const select = useCallback((id: string) => {
     if (saving.current) return;
@@ -221,7 +228,7 @@ function App() {
   useEffect(() => {
     const controller = new AbortController();
     Promise.all(['manifest.json', 'candidates.geojson'].map(async name => {
-      const response = await fetch('./pilot/' + name, { signal: controller.signal });
+      const response = await fetch(assetUrl('./pilot/' + name), { signal: controller.signal });
       if (!response.ok) throw Error('No se pudo abrir el producto ' + name);
       return response.json();
     })).then(([manifest, data]) => setPilot({ manifest, features: data.features }))
@@ -359,28 +366,34 @@ function App() {
 
     <main id="principal">
       <div className="page-heading">
-        <div><p className="location">Área piloto de Tierra del Fuego · 3,69 km²</p>
+        <div><p className="location">Isla Grande de Tierra del Fuego</p>
           <h1>Revisar cambios en el territorio</h1>
-          <p>Compará las imágenes, elegí una zona y anotá lo que observás.</p>
+          <p>Recorré la Isla Grande y abrí los análisis disponibles.</p>
         </div>
         <details className="quick-help">
           <summary>¿Cómo uso esta página?</summary>
           <ol>
             <li>Elegí <strong>Ver 2020</strong> o <strong>Ver 2026</strong> para mirar cada imagen. Con <strong>Comparar</strong> podés deslizar entre las dos.</li>
-            <li>Elegí una zona de la lista o tocá un contorno en el mapa.</li>
+            <li>En el mapa de la isla, acercá la zona que querés recorrer. El punto azul abre el piloto de 10 metros.</li>
+            <li>Dentro del piloto, elegí una zona de la lista o tocá un contorno en el mapa.</li>
             <li>Marcá una opción, escribí un motivo y presioná <strong>Guardar revisión</strong>.</li>
           </ol>
-          <p>Para volver al encuadre inicial, usá <strong>Ver área completa</strong>.</p>
+          <p>Para volver al encuadre inicial, usá <strong>Ver toda la isla</strong> o, dentro del piloto, <strong>Ver área completa</strong>.</p>
         </details>
       </div>
 
       {!cloud && <p className="demo-notice"><strong>Estás en una demostración.</strong> Las imágenes son reales. Las revisiones de prueba quedan guardadas en este navegador.</p>}
 
-      {error ? <div className="error-message" role="alert"><h2>No se pudieron abrir las imágenes</h2><p>{error}</p><button onClick={() => window.location.reload()}>Volver a intentar</button></div> :
-        <div className="workbench" aria-busy={!pilot}>
+      <div className="scope-options" aria-label="Vista del territorio">
+        <button aria-pressed={scope === 'province'} onClick={() => setScope('province')}>Mapa de la isla</button>
+        <button aria-pressed={scope === 'pilot'} onClick={openPilot}>Piloto de 10 metros</button>
+      </div>
+
+      {error && scope === 'pilot' ? <div className="error-message" role="alert"><h2>No se pudieron abrir las imágenes</h2><p>{error}</p><button onClick={() => window.location.reload()}>Volver a intentar</button></div> :
+        <div className="workbench" aria-busy={scope === 'pilot' && !pilot}>
           <section className="comparison" aria-labelledby="compare-title">
             <div className="section-heading"><span className="step" aria-hidden="true">1</span><div>
-              <h2 id="compare-title">Mirar las imágenes</h2><p>Elegí qué fecha querés ver.</p>
+              <h2 id="compare-title" tabIndex={-1}>{scope === 'province' ? 'Recorrer el mapa de la isla' : 'Mirar el piloto de 10 metros'}</h2><p>Elegí qué fecha querés ver.</p>
             </div></div>
             <div className="view-options" aria-label="Fecha de la imagen">
               <button aria-pressed={view === 'before'} onClick={() => setView('before')}><strong>Ver 2020</strong><span>8 de febrero</span></button>
@@ -391,12 +404,13 @@ function App() {
               {view === 'before' ? 'Estás viendo el 8 de febrero de 2020' : view === 'after' ? 'Estás viendo el 13 de marzo de 2026' : '2020 a la izquierda · 2026 a la derecha'}
             </div>
             <div className="map-wrap">
-              {pilot ? <SpectralMap features={features} selected={selected} onSelect={requestSelection} signal={signal}
+              {scope === 'province' ? <ProvincialMap view={view} swipe={swipe} reset={reset} onOpenPilot={openPilot} /> :
+                pilot ? <SpectralMap features={features} selected={selected} onSelect={requestSelection} signal={signal}
                 swipe={swipe} show={show} extent={pilot.manifest.bounds_m} view={view} reset={reset} />
                 : <p className="loading" role="status">Cargando imágenes y zonas…</p>}
               {view === 'compare' && <div className="curtain-line" style={{ left: swipe + '%' }} aria-hidden="true"><span>↔</span></div>}
               <span className="north" aria-hidden="true">N ↑</span>
-              {chosen && <p className="map-selection">{zoneName(chosen)} · contorno blanco</p>}
+              {scope === 'pilot' && chosen && <p className="map-selection">{zoneName(chosen)} · contorno blanco</p>}
             </div>
             {view === 'compare' && <div className="slider-control">
               <label htmlFor="swipe">Mové el control para comparar las imágenes</label>
@@ -404,21 +418,39 @@ function App() {
                 onChange={event => setSwipe(+event.target.value)} aria-valuetext={swipe + ' por ciento de la imagen de 2020'} /><span>2026</span></div>
             </div>}
             <div className="map-actions">
-              <button type="button" onClick={() => setReset(value => value + 1)}>Ver área completa</button>
-              <label className="check-control"><input type="checkbox" checked={show} onChange={event => setShow(event.target.checked)} /> Mostrar zonas para revisar</label>
+              <button type="button" onClick={() => setReset(value => value + 1)}>{scope === 'province' ? 'Ver toda la isla' : 'Ver área completa'}</button>
+              {scope === 'pilot' && <label className="check-control"><input type="checkbox" checked={show} onChange={event => setShow(event.target.checked)} /> Mostrar zonas para revisar</label>}
             </div>
             <div className="map-legend" aria-label="Colores de las zonas">
-              <span><i className="water-key" aria-hidden="true" /> Cambios en agua</span>
-              <span><i className="vegetation-key" aria-hidden="true" /> Cambios en vegetación</span>
+              {scope === 'province' ? <><span><i className="boundary-key" aria-hidden="true" /> Sector argentino · contorno IGN</span><span><i className="pilot-key" aria-hidden="true" /> Piloto con análisis de 10 m</span></> :
+                <><span><i className="water-key" aria-hidden="true" /> Cambios en agua</span><span><i className="vegetation-key" aria-hidden="true" /> Cambios en vegetación</span></>}
             </div>
-            <details className="image-help"><summary>¿Por qué la vegetación se ve roja?</summary>
+            {scope === 'province' ? <details className="image-help"><summary>¿Qué muestra el mapa de la isla?</summary>
+              <p>Imágenes diarias NASA GIBS / MODIS de las dos fechas, en color natural. Su resolución nativa es de 250 metros. Las vistas guardadas están reducidas para cargar rápido.</p>
+              <p>Esta vista permite reconocer el territorio y comparar su apariencia. Las nubes, sombras y luz solar pueden ocultar sectores. Los cambios calculados a 10 metros están disponibles en el piloto.</p>
+              <p>El contorno blanco delimita el sector argentino de la Isla Grande y está simplificado para visualización. La imagen incluye el entorno chileno como referencia geográfica. Las referencias de localidades provienen de Georef.</p>
+            </details> : <details className="image-help"><summary>¿Por qué la vegetación se ve roja?</summary>
               <p>La imagen combina bandas satelitales para facilitar la comparación. El rojo ayuda a distinguir la vegetación. El gris marca lugares que quedaron fuera de la comparación por falta de datos válidos.</p>
               <p>Se pudo comparar el {coverage || '…'} % del área. La diferencia de estación y las sombras pueden influir en los cambios.</p>
-            </details>
+            </details>}
           </section>
 
           <aside className="review-panel" aria-label="Elegir y revisar una zona">
-            {!chosen ? <>
+            {scope === 'province' ? <>
+              <div className="section-heading"><span className="step" aria-hidden="true">2</span><div><h2>Análisis disponibles</h2><p>Elegí un análisis para revisar sus zonas.</p></div></div>
+              <div className="available-analysis">
+                <h3>Piloto costero Sentinel-2</h3>
+                <p>Recorte de 3,69 km² · detalle de 10 metros</p>
+                <p>{pilot ? features.length : '…'} zonas calculadas para revisar</p>
+                <button className="save-button" onClick={openPilot}>Abrir el análisis detallado →</button>
+              </div>
+              <p className="scientific-note"><strong>Cobertura de detección actual</strong><br />Los candidatos calculados corresponden al recorte piloto. La cobertura de análisis de la isla se incorporará por sectores y períodos.</p>
+              <section className="alert-plan"><h3>Seguimiento y alertas</h3>
+                <p>El plan del proyecto incluye una bandeja de novedades y avisos al equipo por correo, Slack o WhatsApp, según la configuración institucional.</p>
+                <p>La integración de envíos externos está planificada y requiere configurar los servicios y destinatarios.</p>
+                <a href="https://github.com/gastoncant/sentinela-selknam/blob/master/ARQUITECTURA_OBJETIVO.md" target="_blank" rel="noreferrer">Ver la arquitectura y el plan de alertas ↗</a>
+              </section>
+            </> : !chosen ? <>
               <div className="section-heading"><span className="step" aria-hidden="true">2</span><div>
                 <h2 ref={listHeading} tabIndex={-1}>Elegir una zona</h2><p>Tocá una fila para abrir su ficha.</p>
               </div></div>
@@ -485,10 +517,14 @@ function App() {
 
       <section className="analysis-information" aria-label="Información del análisis">
         <details><summary>Datos del análisis y descarga para especialistas</summary>
+          <h3>Vista de la Isla Grande</h3>
+          <p>NASA GIBS, producto MODIS Terra Corrected Reflectance True Color, del 8 de febrero de 2020 y del 13 de marzo de 2026. La resolución nativa es de 250 m y la cobertura depende de las observaciones disponibles. El sector argentino de la Isla Grande se extrajo del contorno IGN y se generalizó con una tolerancia de 0,004 grados para facilitar la visualización. Los nombres y posiciones de localidades provienen de Georef.</p>
+          <a className="download-link" href={assetUrl('./province/manifest.json')} download="isla-grande-manifest.json">Descargar fuentes y metadatos del mapa de la isla</a>
+          <h3>Análisis del recorte piloto</h3>
           <p>Área rectangular de 1,92 × 1,92 km en Tierra del Fuego. Imágenes Sentinel-2 L2A del 8 de febrero de 2020 y del 13 de marzo de 2026, sobre una grilla de 10 metros en UTM 19 Sur.</p>
           <p>Se compararon {pilot?.manifest.common_pixels.toLocaleString('es-AR') || '…'} de {pilot?.manifest.pixels.toLocaleString('es-AR') || '…'} píxeles. Hay {features.filter(feature => feature.properties.signal === 'agua').length} componentes de agua y {features.filter(feature => feature.properties.signal === 'vegetacion').length} de vegetación. Las capas pueden solaparse.</p>
           <p>Se usaron índices NDWI y NDVI, máscara SCL 4–6, un cambio mínimo de 0,25 y componentes de al menos cuatro píxeles. Los umbrales requieren validación. Un cambio espectral necesita evidencia adicional para atribuir su causa a castores.</p>
-          <a className="download-link" href="./pilot/candidates.geojson" download>Descargar las zonas en formato GeoJSON</a>
+          <a className="download-link" href={assetUrl('./pilot/candidates.geojson')} download="candidatos-piloto.geojson">Descargar las zonas en formato GeoJSON</a>
           <h3>Escenas utilizadas</h3>{pilot?.manifest.scenes.map(scene => <p key={scene}><code>{scene}</code></p>)}
           <h3>Versión del método</h3><code>{pilot?.manifest.method_sha256}</code>
           <p>Contiene datos Copernicus Sentinel modificados (2020 y 2026), distribuidos por Earth Search.</p>

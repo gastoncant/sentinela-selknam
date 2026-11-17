@@ -15,6 +15,10 @@ Entrar a la dirección Local que muestra Vite. Para distribuir como sitio estát
 
 ## Recorrido de tres minutos
 
+La vista inicial muestra la Isla Grande de Tierra del Fuego. Elegir una fecha o usar **Comparar**; acercar y desplazar el mapa, o volver con **Ver toda la isla**. El contorno blanco delimita el sector argentino. El punto azul y **Abrir el análisis detallado** llevan al piloto.
+
+La vista regional usa imágenes NASA GIBS / MODIS de 250 m nativos, con nubes y cobertura variable. Las vistas guardadas están remuestreadas. Los 200 componentes calculados pertenecen al piloto Sentinel-2. Para revisar esas zonas:
+
 1. Elegir **Ver 2020** o **Ver 2026**. El botón **Comparar** muestra el control para deslizar entre ambas fechas.
 2. Usar **Acercar**, **Alejar** y **Ver área completa**. La casilla **Mostrar zonas para revisar** permite alternar los contornos.
 3. Elegir un filtro y abrir una fila de la lista, o tocar una zona en el mapa. La ficha se abre con su superficie y una descripción.
@@ -47,4 +51,10 @@ Supabase Free publica 500 MB de base, 1 GB de archivos y pausa proyectos tras un
 La integración está implementada en código. La cuenta Supabase y sus credenciales no se configuraron durante esta entrega. El modo sin conexión a Supabase permite presentar el flujo con almacenamiento local. Consultar `VERIFICACION.md` para las pruebas ejecutadas.
 
 [Supabase Free](https://supabase.com/pricing) · [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security) · [Cloudflare Pages](https://developers.cloudflare.com/pages/platform/limits/)
+
+## Alcance insular y alertas
+
+La [arquitectura objetivo](../ARQUITECTURA_OBJETIVO.md) describe datos y permisos, ejecuciones versionadas, procesamiento por sectores, bandeja de seguimiento, outbox, SNS, colas, adaptadores y fases de aceptación. Los envíos externos requieren implementar y configurar esos servicios y sus destinatarios.
+
+Para reproducir los recursos regionales se necesita Python con Shapely. Ejecutar build_province_assets.py consulta IGN y NASA, guarda vistas y registra fuentes y hashes. El contorno original puede superar 80 MB y se selecciona el polígono del sector argentino de la Isla Grande y se generaliza para visualización. El alcance operativo previsto se limita a ese sector. El manifiesto de public/province conserva la procedencia de la versión incluida.
 

@@ -1,0 +1,58 @@
+{
+  "product": "Vista regional de reconocimiento",
+  "provider": "NASA GIBS",
+  "layer": "MODIS_Terra_CorrectedReflectance_TrueColor",
+  "native_resolution_m": 250,
+  "dates": [
+    "2020-02-08",
+    "2026-03-13"
+  ],
+  "projection": "EPSG:4326",
+  "boundary": {
+    "url": "https://wms.ign.gob.ar/geoserver/ows?service=WFS&version=2.0.0&request=GetFeature&typeNames=ign:provincia&outputFormat=application/json&srsName=EPSG:4326&CQL_FILTER=in1%3D%2794%27",
+    "raw_sha256": "7cded15c87461b21809292a42209063366bc0b252c2ee5987087667ad8869abc",
+    "display_tolerance_degrees": 0.004,
+    "purpose": "Contorno argentino de Isla Grande para orientación",
+    "selection": "Mayor polígono terrestre conectado dentro del encuadre insular",
+    "pole_normalization": "Recorte a 90 grados para errores de redondeo menores de 0,000001 grados"
+  },
+  "places": {
+    "url": "https://apis.datos.gob.ar/georef/api/localidades?provincia=94&max=100",
+    "raw_sha256": "aae86ac9e07f0025310f0ecaa4a42075c38b4c6a1b31bfd5e53a548c0949dfce"
+  },
+  "regions": [
+    {
+      "id": "fueguino",
+      "name": "Isla Grande de Tierra del Fuego",
+      "bbox": [
+        -71.5,
+        -55.25,
+        -65,
+        -52.35
+      ],
+      "frames": [
+        {
+          "date": "2020-02-08",
+          "file": "fueguino-before.jpg",
+          "url": "https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi?service=WMS&version=1.1.1&request=GetMap&layers=MODIS_Terra_CorrectedReflectance_TrueColor&styles=&format=image%2Fjpeg&srs=EPSG%3A4326&bbox=-71.5%2C-55.25%2C-65%2C-52.35&width=1200&height=850&time=2020-02-08"
+        },
+        {
+          "date": "2026-03-13",
+          "file": "fueguino-after.jpg",
+          "url": "https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi?service=WMS&version=1.1.1&request=GetMap&layers=MODIS_Terra_CorrectedReflectance_TrueColor&styles=&format=image%2Fjpeg&srs=EPSG%3A4326&bbox=-71.5%2C-55.25%2C-65%2C-52.35&width=1200&height=850&time=2026-03-13"
+        }
+      ]
+    }
+  ],
+  "hashes": {
+    "boundary.geojson": "133ab20cf6b721acde3cab3690f9c1745a5df5740d9e1f8276118bddc95b4522",
+    "places.json": "bbeb3146b4befab6959e824c72b43600ad9836e23a9b965d78a429d751eda094",
+    "fueguino-before.jpg": "6cbb34d0786f0e80a0ed8e458072c65758996f0f149b2fa30671d70cab670e33",
+    "fueguino-after.jpg": "687c029ceedc2eb57c5e939b5281dfdc4acfa004ef124cd9dcc6be3bad33f123"
+  },
+  "limits": [
+    "Las imágenes diarias pueden contener nubes, sombras y áreas sin observación.",
+    "Las vistas regionales no calculan candidatos ni métricas de castores.",
+    "Las miniaturas están remuestreadas. El servicio remoto conserva su detalle disponible."
+  ]
+}
