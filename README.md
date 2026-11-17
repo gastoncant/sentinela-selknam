@@ -1,58 +1,74 @@
-# Primer avance con Supabase
-
-La entrega actual se encuentra en [primer-avance](primer-avance/README.md). Incluye React y TypeScript, Leaflet, productos Sentinel-2 reales, integración Supabase y pruebas SQL de permisos.
-
-- [Vista previa privada](https://sentinela-selknam-primer-avance.glitteringbadge.chatgpt.site)
-- [Demo de archivo único](Demo_Sentinela_Selknam.html)
-- [Documento del avance en PDF](Sentinela_Selknam_Primer_Avance.pdf)
-- [Documento editable](Sentinela_Selknam_Primer_Avance.docx)
-- [Verificación](primer-avance/VERIFICACION.md)
-
-La subida a GitHub requiere una sesión autenticada y sigue pendiente. El paquete ZIP permite presentar una carpeta compartida.
-
-El recorte costero de esta entrega produce 69 componentes de agua y 131 de vegetación. La demo publicada permite ensayar revisiones locales. La cuenta Supabase remota sigue pendiente de configuración. La guía incluye sus scripts y los pasos de conexión.
-
-El código y la documentación que siguen corresponden al prototipo anterior con un recorte diferente.
 # Sentinela Selknam
 
-Tablero de revisión de cambios de agua y vegetación en Tierra del Fuego. Incluye un piloto real de Sentinel-2 ya procesado. El operador alterna dos observaciones alineadas, localiza polígonos, descarga geometrías y documenta hipótesis. La organización decide si publica el producto espectral. Las revisiones y las identidades quedan en la vista privada.
+Primer avance de un tablero ambiental para Tierra del Fuego. La demo actual usa React, TypeScript y Leaflet, con integración Supabase preparada para autenticación y revisión compartida.
 
-## Probar en Windows
+## Descargar y ejecutar la demo
 
-Desde la raíz del checkout, con Python 3.12 y PowerShell:
+1. Descargar el repositorio desde **Code → Download ZIP** y descomprimirlo, o clonarlo con Git.
+2. Instalar Node.js 22.12 o superior. Node.js 24 permite ejecutar la compilación verificada.
+3. Abrir una terminal en la carpeta descomprimida del proyecto y ejecutar:
 
-```powershell
-py -3.12 -m venv .venv
-.venv/Scripts/python -m pip install -r requirements.txt
-$env:LOCAL_DEMO='1'
-.venv/Scripts/python manage.py migrate
-.venv/Scripts/python manage.py import_pilot Equipo
-.venv/Scripts/python manage.py operator operador Equipo
-.venv/Scripts/python manage.py runserver 127.0.0.1:8000
+```sh
+cd primer-avance
+npm ci
+npm run dev
 ```
 
-Abrí http://127.0.0.1:8000 e ingresá con esa cuenta. La contraseña se elige en la terminal y se almacena con el hash de Django. Para habilitar el recorrido público en esa instalación ejecutá `manage.py import_pilot Equipo --publish` con el mismo intérprete. Para retirarlo ejecutá `manage.py unpublish ID`. Los archivos ya descargados quedan en poder del destinatario.
+Abrir la dirección **Local** que muestra Vite, normalmente http://127.0.0.1:5173/. Mantener esa terminal abierta mientras se usa la demo. Para detenerla, presionar Ctrl+C.
 
-## Recorrido de operador
+En Windows también se puede abrir **INICIAR_DEMO.cmd** desde la carpeta raíz. Comprueba Node.js, instala las dependencias si faltan y arranca la demo.
 
-1. Abrí el análisis y comprobá fechas, cobertura común y escenas. Activá «Ver segunda fecha» con clic o con la barra espaciadora. La posición y la escala se mantienen. Activá «Cambios observados» para superponer las señales sobre cualquiera de las fechas.
-2. Filtrá por agua o vegetación y, dentro de tu organización, por fichas pendientes. Cada página presenta hasta 25. Abrí una ficha, ubicá su recuadro en la imagen y consultá área, primer vértice y variación media de índices. El GeoJSON conserva el contorno completo en longitud y latitud.
-3. Registrá «Compatible», «Otra causa» o «Información insuficiente», el motivo y la referencia de evidencia si existe. Cada revisión agrega autor y fecha. Ante un conflicto de versión, reabrí el análisis, leé la revisión nueva y decidí si corresponde registrar otra.
-4. Un visitante accede únicamente a análisis publicados, imágenes y GeoJSON espectral. Un miembro puede consultar y revisar análisis de los grupos a los que pertenece. La publicación y la creación de usuarios requieren acceso administrativo al host. Las bajas se gestionan desactivando la cuenta Django.
+Para generar una nueva compilación:
 
-## Reproducción y validación
-
-```powershell
-.venv/Scripts/python -m pip install -r requirements-gis.txt
-.venv/Scripts/python process_pilot.py recalculo
-Get-FileHash pilot/manifest.json,recalculo/manifest.json
-.venv/Scripts/python manage.py test
-.venv/Scripts/python verify_restore.py
+```sh
+cd primer-avance
+npm run build
+npm run preview
 ```
 
-El procesamiento lee ventanas HTTP de cuatro COG por escena desde sus URL públicas congeladas en `sources/`. Se ejecuta fuera del servidor web. El manifiesto conserva versiones por hash de código, metadatos y productos. Al importar se verifican los cuatro productos y se guardan con el análisis en una sola transacción. La reimportación del mismo manifiesto para la misma organización conserva las fichas existentes.
+La carpeta **docs/** incluye una compilación lista para servir desde un hosting estático. La carpeta **primer-avance/dist/** se genera con el comando de compilación. La interfaz usa imágenes y geometrías incluidas en el repositorio. La instalación inicial necesita acceso a npm.
 
-- [Método y fuentes](METODO.md)
-- [Despliegue, costos y recuperación](AWS.md)
-- [Auditoría y pendientes](AUDITORIA.md)
+## Qué demuestra
 
+- Comparación de dos observaciones reales de Sentinel-2 con cortina temporal.
+- Selección de polígonos en el mapa o en una lista, con filtros por agua y vegetación.
+- Fichas con superficie, índices y procedencia.
+- Ensayos de revisión guardados en el navegador.
+- Descarga de geometrías GeoJSON.
+
+El recorte costero tiene 69 componentes de agua y 131 de vegetación, con 95,68 % de cobertura común válida. Las capas pueden solaparse y su causa requiere evidencia independiente.
+
+## Supabase
+
+La demo arranca sin variables de entorno y permite ensayar el recorrido. Las revisiones de ese modo se guardan en el navegador del visitante.
+
+Para la revisión compartida, configurar un proyecto Supabase con los scripts y pasos de [primer-avance/README.md](primer-avance/README.md#conectar-supabase-free). El cliente, las políticas RLS y la función de revisión están implementados. La cuenta Supabase remota sigue pendiente de configuración.
+
+El frontend admite únicamente la URL y la clave publicable del proyecto. Las claves secretas y las credenciales de base de datos se mantienen fuera del navegador y de Git.
+
+## Entrega
+
+- [Documento del avance en PDF](Sentinela_Selknam_Primer_Avance.pdf)
+- [Documento editable en Word](Sentinela_Selknam_Primer_Avance.docx)
+- [Guía de la demo y conexión a Supabase](primer-avance/README.md)
+- [Pruebas y límites del avance](primer-avance/VERIFICACION.md)
+- [Demo pública en GitHub Pages](https://gastoncant.github.io/sentinela-selknam/)
+- [Vista previa privada para la cuenta propietaria](https://sentinela-selknam-primer-avance.glitteringbadge.chatgpt.site)
+
+La vista previa privada requiere acceso de su propietaria. El código y los productos de la demo pueden descargarse desde este repositorio público.
+
+## Verificar
+
+Desde la carpeta primer-avance:
+
+```sh
+npm ci
+npm run build
+node verify-db.mjs
+```
+
+El ensayo SQL usa PostgreSQL embebido para verificar los permisos y el control de versión. Los resultados deben repetirse contra un proyecto Supabase real antes de operar con usuarios.
+
+## Otros archivos del proyecto
+
+El prototipo Django y la propuesta AWS anteriores permanecen en la raíz. Su guía está en [README_DJANGO.md](README_DJANGO.md). El primer avance presentado se concentra en la carpeta primer-avance.

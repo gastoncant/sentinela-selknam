@@ -1,0 +1,28 @@
+name: Primer avance con Supabase
+on:
+  push:
+    paths:
+      - 'primer-avance/**'
+      - '.github/workflows/primer-avance.yml'
+  pull_request:
+    paths:
+      - 'primer-avance/**'
+      - '.github/workflows/primer-avance.yml'
+permissions:
+  contents: read
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: primer-avance
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: primer-avance/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - run: node verify-db.mjs

@@ -4,12 +4,14 @@ Demo React + TypeScript + Leaflet con integración Supabase Auth y PostgreSQL pr
 
 ## Abrir
 
+Instalar Node.js 22.12 o superior y abrir la terminal en la carpeta primer-avance.
+
 ```sh
 npm ci
 npm run dev
 ```
 
-Entrar al Local URL que muestra Vite. Para distribuir como sitio estático ejecutar `npm run build` y publicar el contenido de `dist/` en Cloudflare Pages u otro hosting estático. Para probar la compilación ejecutar `npm run preview`. La carpeta `dist/` del ZIP ya está construida. Debe servirse con HTTP. Abrir index.html por doble clic puede bloquear los módulos y las lecturas JSON.
+Entrar a la dirección Local que muestra Vite. Para distribuir como sitio estático ejecutar `npm run build` y publicar el contenido de `dist/` en Cloudflare Pages u otro hosting estático. Para probar la compilación ejecutar `npm run preview`. La carpeta docs de la raíz incluye una compilación lista. Debe servirse con HTTP. Abrir index.html por doble clic puede bloquear los módulos y las lecturas JSON.
 
 ## Recorrido de tres minutos
 

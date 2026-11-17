@@ -5,10 +5,10 @@ Sentinela_Selknam_Primer_Avance.pdf
 La versión DOCX queda disponible para editar.
 
 Repositorio o carpeta del proyecto
-Descomprimir el ZIP Sentinela_Selknam_Primer_Avance.zip.
-Subir su carpeta a Drive y habilitar lectura mediante enlace para el jurado.
-El repositorio GitHub todavía requiere iniciar sesión para completar la subida.
-El último commit local de entrega es 5a832b4.
+Repositorio público https://github.com/gastoncant/sentinela-selknam
+Descargar desde Code > Download ZIP y descomprimir.
+En Windows, abrir INICIAR_DEMO.cmd con Node.js 22.12 o superior instalado.
+También puede compartirse la carpeta mediante Drive.
 
 Demo
 Demo_Sentinela_Selknam.html reúne código y productos en un solo archivo.
@@ -20,6 +20,9 @@ de este HTML queda por comprobar en el navegador del equipo de presentación.
 Vista previa alojada para la cuenta propietaria
 https://sentinela-selknam-primer-avance.glitteringbadge.chatgpt.site
 Su acceso es privado. Para el jurado usar la carpeta compartida.
+
+Demo pública para el jurado
+https://gastoncant.github.io/sentinela-selknam/
 
 Recorrido sugerido de presentación
 1. Mostrar las dos fechas y mover la cortina.
