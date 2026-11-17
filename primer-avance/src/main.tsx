@@ -1,159 +1,528 @@
-import React, {useEffect, useRef, useState} from 'react';
-import {createRoot} from 'react-dom/client';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { createRoot } from 'react-dom/client';
 import L from 'leaflet';
 import proj4 from 'proj4';
-import {createClient, type SupabaseClient} from '@supabase/supabase-js';
-import type {Feature, Polygon, MultiPolygon} from 'geojson';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import type { Feature, Polygon, MultiPolygon } from 'geojson';
 import 'leaflet/dist/leaflet.css';
 import './style.css';
 
-type Props = {id:string;signal:'agua'|'vegetacion';area_m2:number;delta_ndwi:number;delta_ndvi:number};
-type Candidate = Feature<Polygon|MultiPolygon,Props>;
-type Review = {candidate_id:string;state:string;reason:string;version:number;at:string};
-type Pilot = {features:Candidate[];manifest:{scenes:string[];common_pixels:number;pixels:number;method_sha256:string;bounds_m:number[]}};
-const endpoint=import.meta.env.VITE_SUPABASE_URL;
-const key=import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-const cloud:SupabaseClient|null=endpoint&&key?createClient(endpoint,key):null;
-const states=['Compatible con impacto de castor','Otra causa','Información insuficiente'];
-const org='00000000-0000-4000-8000-000000000001';
-const projection='+proj=utm +zone=19 +south +datum=WGS84 +units=m +no_defs';
-const savedKey='sentinela-costero-68eaf776-revisiones-v1';
+type Properties = {
+  id: string;
+  signal: 'agua' | 'vegetacion';
+  area_m2: number;
+  delta_ndwi: number;
+  delta_ndvi: number;
+};
+type Candidate = Feature<Polygon | MultiPolygon, Properties>;
+type Review = {
+  candidate_id: string;
+  state: string;
+  reason: string;
+  version: number;
+  at: string;
+};
+type Pilot = {
+  features: Candidate[];
+  manifest: {
+    scenes: string[];
+    common_pixels: number;
+    pixels: number;
+    method_sha256: string;
+    bounds_m: number[];
+  };
+};
+type View = 'before' | 'compare' | 'after';
 
-function readLocal():Review[] {
+const endpoint = import.meta.env.VITE_SUPABASE_URL;
+const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const cloud: SupabaseClient | null = endpoint && key ? createClient(endpoint, key) : null;
+const states = ['Compatible con impacto de castor', 'Otra causa', 'Información insuficiente'];
+const reviewOptions = [
+  { label: 'Puede ser compatible con castores', explanation: 'La imagen sugiere un posible impacto. Requiere comprobarlo.' },
+  { label: 'Parece otra causa', explanation: 'Observás un cambio que podría tener otra explicación.' },
+  { label: 'Falta información', explanation: 'Con estas imágenes todavía no podés decidir.' },
+];
+const organization = '00000000-0000-4000-8000-000000000001';
+const projection = '+proj=utm +zone=19 +south +datum=WGS84 +units=m +no_defs';
+const savedKey = 'sentinela-costero-68eaf776-revisiones-v1';
+const pageSize = 6;
+
+function zoneName(candidate: Candidate) {
+  const number = candidate.properties.id.split('-').pop();
+  return `Zona de ${candidate.properties.signal === 'agua' ? 'agua' : 'vegetación'} ${number}`;
+}
+
+function readLocal(): Review[] {
   try {
-    const data=JSON.parse(localStorage.getItem(savedKey)||'[]');
-    return Array.isArray(data)?data.filter(r=>typeof r.candidate_id==='string'&&states.includes(r.state)&&Number.isInteger(r.version)&&typeof r.reason==='string'&&typeof r.at==='string'):[];
-  } catch(e) {
-    console.warn('No se pudieron recuperar las revisiones locales.',e);
+    const data = JSON.parse(localStorage.getItem(savedKey) || '[]');
+    return Array.isArray(data) ? data.filter(review =>
+      typeof review.candidate_id === 'string' &&
+      states.includes(review.state) &&
+      Number.isInteger(review.version) &&
+      typeof review.reason === 'string' &&
+      typeof review.at === 'string'
+    ) : [];
+  } catch (error) {
+    console.warn('No se pudieron recuperar las revisiones locales.', error);
     return [];
   }
 }
-function SpectralMap({features,selected,onSelect,signal,swipe,show,extent}:{features:Candidate[];selected:string;onSelect:(id:string)=>void;signal:string;swipe:number;show:boolean;extent:number[]}) {
-  const element=useRef<HTMLDivElement>(null);
-  const map=useRef<L.Map|null>(null);
-  const polygons=useRef<L.GeoJSON|null>(null);
-  const after=useRef<L.ImageOverlay|null>(null);
-  useEffect(()=>{
-    const m=L.map(element.current!,{crs:L.CRS.Simple,minZoom:-6,maxZoom:1,zoomSnap:0.25,attributionControl:false});
-    map.current=m;
-    const bounds=L.latLngBounds([extent[1],extent[0]],[extent[3],extent[2]]);
-    L.imageOverlay('./pilot/before.png',bounds).addTo(m);
-    after.current=L.imageOverlay('./pilot/after.png',bounds).addTo(m);
-    m.fitBounds(bounds.pad(0.1));
-    const resize=new ResizeObserver(()=>m.invalidateSize());
-    resize.observe(element.current!);
-    return ()=>{resize.disconnect();m.remove();map.current=null;};
-  },[]);
-  useEffect(()=>{
-    if(polygons.current)polygons.current.remove();
-    polygons.current=L.geoJSON(features.filter(f=>signal==='todas'||f.properties.signal===signal),{
-      coordsToLatLng:(coords)=>{const [x,y]=proj4('EPSG:4326',projection,[coords[0],coords[1]]);return L.latLng(y,x);},
-      style:(f)=>({color:f?.properties.id===selected?'#fff':f?.properties.signal==='agua'?'#40d8ff':'#ffd078',weight:f?.properties.id===selected?3:1,fillOpacity:0.25}),
-      onEachFeature:(f,layer)=>layer.on('click',()=>onSelect(f.properties.id))
+
+function SpectralMap({ features, selected, onSelect, signal, swipe, show, extent, view, reset }: {
+  features: Candidate[];
+  selected: string;
+  onSelect: (id: string) => void;
+  signal: string;
+  swipe: number;
+  show: boolean;
+  extent: number[];
+  view: View;
+  reset: number;
+}) {
+  const element = useRef<HTMLDivElement>(null);
+  const map = useRef<L.Map | null>(null);
+  const polygons = useRef<L.GeoJSON | null>(null);
+  const after = useRef<L.ImageOverlay | null>(null);
+
+  useEffect(() => {
+    const currentMap = L.map(element.current!, {
+      crs: L.CRS.Simple,
+      minZoom: -6,
+      maxZoom: 1,
+      zoomSnap: 0.25,
+      attributionControl: false,
+      zoomControl: false,
+      scrollWheelZoom: false,
     });
-    if(show)polygons.current.addTo(map.current!);
-    return ()=>{polygons.current?.remove();};
-  },[features,signal,show,selected,onSelect]);
-  useEffect(()=>{
-    const img=after.current?.getElement();
-    if(img)img.style.clipPath='inset(0 0 0 '+swipe+'%)';
-  },[swipe]);
-  return <div ref={element} className="leaflet-map" aria-label="Mapa del área piloto. La lista de candidatos ofrece una alternativa textual."/>;
+    map.current = currentMap;
+    currentMap.getPane('overlayPane')?.setAttribute('aria-hidden', 'true');
+    const bounds = L.latLngBounds([extent[1], extent[0]], [extent[3], extent[2]]);
+    L.imageOverlay('./pilot/before.png', bounds).addTo(currentMap);
+    after.current = L.imageOverlay('./pilot/after.png', bounds).addTo(currentMap);
+    currentMap.fitBounds(bounds.pad(0.04));
+    const resize = new ResizeObserver(() => currentMap.invalidateSize());
+    resize.observe(element.current!);
+    return () => {
+      resize.disconnect();
+      currentMap.remove();
+      map.current = null;
+    };
+  }, [extent]);
+
+  useEffect(() => {
+    const currentMap = map.current!;
+    const overlay = after.current!;
+    function updateCurtain() {
+      const image = overlay.getElement();
+      if (!image) return;
+      const imageBox = image.getBoundingClientRect();
+      const mapBox = currentMap.getContainer().getBoundingClientRect();
+      const split = mapBox.left + mapBox.width * swipe / 100;
+      const left = Math.max(0, Math.min(imageBox.width, split - imageBox.left));
+      image.style.clipPath = view === 'compare' ? `inset(0 0 0 ${left}px)` : '';
+      image.style.opacity = view === 'before' ? '0' : '1';
+    }
+    updateCurtain();
+    overlay.on('load', updateCurtain);
+    currentMap.on('move zoom resize', updateCurtain);
+    return () => {
+      overlay.off('load', updateCurtain);
+      currentMap.off('move zoom resize', updateCurtain);
+    };
+  }, [view, swipe]);
+
+  useEffect(() => {
+    polygons.current?.remove();
+    const visible = features.filter(feature => signal === 'todas' || feature.properties.signal === signal);
+    const layer = L.geoJSON(visible, {
+      coordsToLatLng: coordinates => {
+        const [x, y] = proj4('EPSG:4326', projection, [coordinates[0], coordinates[1]]);
+        return L.latLng(y, x);
+      },
+      style: feature => ({
+        color: feature?.properties.id === selected ? '#ffffff' : feature?.properties.signal === 'agua' ? '#5de2ff' : '#ffd17e',
+        weight: feature?.properties.id === selected ? 4 : 1.5,
+        fillOpacity: feature?.properties.id === selected ? 0.32 : 0.12,
+        dashArray: feature?.properties.signal === 'vegetacion' && feature.properties.id !== selected ? '4 3' : undefined,
+      }),
+      onEachFeature: (feature, polygon) => {
+        polygon.on('click', () => onSelect(feature.properties.id));
+        polygon.bindTooltip(zoneName(feature as Candidate), { sticky: true });
+      },
+    });
+    polygons.current = layer;
+    if (show) layer.addTo(map.current!);
+    return () => { layer.remove(); };
+  }, [features, signal, show, selected, onSelect]);
+
+  useEffect(() => {
+    if (reset) {
+      map.current?.fitBounds(L.latLngBounds([extent[1], extent[0]], [extent[3], extent[2]]).pad(0.04));
+    }
+  }, [reset, extent]);
+
+  return <>
+    <div className="map-tools" aria-label="Controles del mapa">
+      <button type="button" onClick={() => map.current?.zoomIn()}>Acercar +</button>
+      <button type="button" onClick={() => map.current?.zoomOut()}>Alejar −</button>
+    </div>
+    <div ref={element} className="leaflet-map" role="region" aria-label="Imagen satelital del área piloto. También podés elegir una zona en la lista." />
+  </>;
 }
 
 function App() {
-  const [pilot,setPilot]=useState<Pilot|null>(null);
-  const [error,setError]=useState('');
-  const [signal,setSignal]=useState('todas');
-  const [selected,setSelected]=useState('agua-1');
-  const [page,setPage]=useState(1);
-  const [swipe,setSwipe]=useState(50);
-  const [show,setShow]=useState(true);
-  const [reviews,setReviews]=useState<Review[]>(cloud?[]:readLocal);
-  const [state,setState]=useState(states[2]);
-  const [reason,setReason]=useState('');
-  const [status,setStatus]=useState('');
-  const [busy,setBusy]=useState(false);
-  const [login,setLogin]=useState(false);
-  const [user,setUser]=useState('');
-  const [email,setEmail]=useState('');
-  const [password,setPassword]=useState('');
-  const select=React.useCallback((id:string)=>{setSelected(id);setStatus('');setReason('');},[]);
-  useEffect(()=>{
-    const controller=new AbortController();
-    Promise.all(['manifest.json','candidates.geojson'].map(async name=>{
-      const r=await fetch('./pilot/'+name,{signal:controller.signal});
-      if(!r.ok)throw Error('No se pudo abrir el producto '+name);
-      return r.json();
-    })).then(([manifest,data])=>setPilot({manifest,features:data.features})).catch(e=>{if(e.name!=='AbortError')setError('No se pudieron cargar los productos. Recargá la página o verificá la conexión.');});
-    return ()=>controller.abort();
-  },[]);
+  const [pilot, setPilot] = useState<Pilot | null>(null);
+  const [error, setError] = useState('');
+  const [signal, setSignal] = useState('todas');
+  const [selected, setSelected] = useState('');
+  const [page, setPage] = useState(1);
+  const [view, setView] = useState<View>('after');
+  const [swipe, setSwipe] = useState(50);
+  const [show, setShow] = useState(true);
+  const [reset, setReset] = useState(0);
+  const [reviews, setReviews] = useState<Review[]>(cloud ? [] : readLocal);
+  const [state, setState] = useState(states[2]);
+  const [reason, setReason] = useState('');
+  const [status, setStatus] = useState('');
+  const [saved, setSaved] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [login, setLogin] = useState(false);
+  const [user, setUser] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [pendingSelection, setPendingSelection] = useState<string | null>(null);
+  const reviewHeading = useRef<HTMLHeadingElement>(null);
+  const listHeading = useRef<HTMLHeadingElement>(null);
+  const loginDialog = useRef<HTMLDialogElement>(null);
+  const discardDialog = useRef<HTMLDialogElement>(null);
+  const reasonField = useRef<HTMLTextAreaElement>(null);
+  const saving = useRef(false);
+
+  const select = useCallback((id: string) => {
+    if (saving.current) return;
+    setSelected(id);
+    setStatus('');
+    setReason('');
+    setState(states[2]);
+    setSaved(false);
+    if (!id) requestAnimationFrame(() => listHeading.current?.focus());
+  }, []);
+
+  const requestSelection = useCallback((id: string) => {
+    if (saving.current) return;
+    if (reasonField.current?.value.trim()) {
+      setPendingSelection(id);
+      return;
+    }
+    select(id);
+  }, [select]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    Promise.all(['manifest.json', 'candidates.geojson'].map(async name => {
+      const response = await fetch('./pilot/' + name, { signal: controller.signal });
+      if (!response.ok) throw Error('No se pudo abrir el producto ' + name);
+      return response.json();
+    })).then(([manifest, data]) => setPilot({ manifest, features: data.features }))
+      .catch(failure => {
+        if (failure.name !== 'AbortError') setError('No pudimos cargar las imágenes. Revisá la conexión y volvé a intentar.');
+      });
+    return () => controller.abort();
+  }, []);
+
   async function loadReviews() {
-    if(!cloud)return;
-    const {data,error}=await cloud.from('review_heads').select('candidate_id,state,reason,version,at').eq('org_id',org);
-    if(error){setStatus('No se pudieron cargar las revisiones de tu organización.');return;}
-    setReviews(data||[]);
+    if (!cloud) return;
+    const { data, error: failure } = await cloud.from('review_heads')
+      .select('candidate_id,state,reason,version,at').eq('org_id', organization);
+    if (failure) {
+      setStatus('No pudimos cargar las revisiones del equipo. Volvé a intentar.');
+      return;
+    }
+    setReviews(data || []);
   }
-  useEffect(()=>{
-    if(!cloud)return;
-    let active=true;
-    cloud.auth.getUser().then(({data})=>{if(active)setUser(data.user?.email||'');});
-    const {data}=cloud.auth.onAuthStateChange((_event,session)=>{if(active){setUser(session?.user.email||'');setReviews([]);}});
-    return ()=>{active=false;data.subscription.unsubscribe();};
-  },[]);
-  useEffect(()=>{if(user)void loadReviews();},[user]);
-  const features=pilot?.features||[];
-  const filtered=features.filter(f=>signal==='todas'||f.properties.signal===signal);
-  const countPages=Math.max(1,Math.ceil(filtered.length/12));
-  const shown=filtered.slice((page-1)*12,page*12);
-  const chosen=features.find(f=>f.properties.id===selected);
-  const current=reviews.find(r=>r.candidate_id===selected);
-  async function save(e:React.FormEvent) {
-    e.preventDefault();
-    if(!reason.trim()||busy)return;
-    setBusy(true);setStatus('');
-    const revision={candidate_id:selected,state,reason:reason.trim(),version:(current?.version||0)+1,at:new Date().toISOString()};
+
+  useEffect(() => {
+    if (!cloud) return;
+    let active = true;
+    cloud.auth.getUser().then(({ data }) => {
+      if (active) setUser(data.user?.email || '');
+    });
+    const { data } = cloud.auth.onAuthStateChange((_event, session) => {
+      if (active) {
+        setUser(session?.user.email || '');
+        setReviews([]);
+      }
+    });
+    return () => { active = false; data.subscription.unsubscribe(); };
+  }, []);
+
+  useEffect(() => { if (user) void loadReviews(); }, [user]);
+  useEffect(() => {
+    if (selected) reviewHeading.current?.focus();
+  }, [selected]);
+  useEffect(() => {
+    if (login) loginDialog.current?.showModal();
+    else loginDialog.current?.close();
+  }, [login]);
+  useEffect(() => {
+    if (pendingSelection !== null) discardDialog.current?.showModal();
+    else discardDialog.current?.close();
+  }, [pendingSelection]);
+
+  const features = pilot?.features || [];
+  const filtered = features.filter(feature => signal === 'todas' || feature.properties.signal === signal);
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const shown = filtered.slice((page - 1) * pageSize, page * pageSize);
+  const chosen = features.find(feature => feature.properties.id === selected);
+  const current = reviews.find(review => review.candidate_id === selected);
+  const position = filtered.findIndex(feature => feature.properties.id === selected);
+  const next = filtered[position + 1];
+  const coverage = pilot ? (pilot.manifest.common_pixels / pilot.manifest.pixels * 100).toFixed(1).replace('.', ',') : '';
+
+  async function save(event: React.FormEvent) {
+    event.preventDefault();
+    if (busy) return;
+    if (!reason.trim()) {
+      setStatus('Escribí un motivo antes de guardar. Por ejemplo, qué observás o qué falta comprobar.');
+      reasonField.current?.focus();
+      return;
+    }
+    setBusy(true);
+    saving.current = true;
+    setStatus('');
+    setSaved(false);
+    const revision = {
+      candidate_id: selected, state, reason: reason.trim(),
+      version: (current?.version || 0) + 1, at: new Date().toISOString(),
+    };
     try {
-      if(cloud) {
-        if(!user){setLogin(true);return;}
-        const {error}=await cloud.rpc('record_review',{p_candidate:selected,p_state:state,p_reason:reason.trim(),p_expected:current?.version||0});
-        if(error){
-          setStatus(error.code==='40001'?'Otra persona actualizó la ficha. Revisá la versión nueva antes de guardar.':'No se pudo guardar. Verificá la sesión y tu pertenencia al equipo.');
-          await loadReviews();return;
+      if (cloud) {
+        if (!user) { setLogin(true); return; }
+        const { error: failure } = await cloud.rpc('record_review', {
+          p_candidate: selected, p_state: state, p_reason: reason.trim(), p_expected: current?.version || 0,
+        });
+        if (failure) {
+          setStatus(failure.code === '40001'
+            ? 'Otra persona cambió esta revisión. Leé la última revisión que aparece abajo y volvé a guardar si corresponde.'
+            : 'No pudimos guardar. Revisá tu sesión y el acceso al equipo. Tu comentario sigue en la pantalla.');
+          await loadReviews();
+          return;
         }
         await loadReviews();
       } else {
-        const latest=readLocal();
-        if((latest.find(r=>r.candidate_id===selected)?.version||0)!==(current?.version||0)){
-          setReviews(latest);setStatus('La ficha cambió en otra pestaña. Revisá la versión nueva.');return;
+        const latest = readLocal();
+        if ((latest.find(review => review.candidate_id === selected)?.version || 0) !== (current?.version || 0)) {
+          setReviews(latest);
+          setStatus('Esta zona cambió en otra pestaña. Leé la última revisión y volvé a guardar si corresponde.');
+          return;
         }
-        const next=[...latest.filter(r=>r.candidate_id!==selected),revision];
-        localStorage.setItem(savedKey,JSON.stringify(next));setReviews(next);
+        const updated = [...latest.filter(review => review.candidate_id !== selected), revision];
+        localStorage.setItem(savedKey, JSON.stringify(updated));
+        setReviews(updated);
       }
-      setReason('');setStatus(cloud?'Revisión guardada en Supabase.':'Ensayo guardado en este navegador.');
-    } catch(e) {console.error('Falló el guardado',e);setStatus('No se pudo guardar. Verificá el almacenamiento y reintentá.');}
-    finally {setBusy(false);}
+      setReason('');
+      setSaved(true);
+      setStatus(cloud ? 'Revisión guardada para tu equipo.' : 'Revisión de prueba guardada en este navegador.');
+    } catch (failure) {
+      console.error('Falló el guardado', failure);
+      setStatus('No pudimos guardar. Tu comentario sigue en la pantalla. Revisá la conexión o el almacenamiento y volvé a intentar.');
+    } finally { setBusy(false); saving.current = false; }
   }
-  async function signIn(e:React.FormEvent) {
-    e.preventDefault();if(!cloud)return;
+
+  async function signIn(event: React.FormEvent) {
+    event.preventDefault();
+    if (!cloud) return;
     setBusy(true);
     try {
-      const {error}=await cloud.auth.signInWithPassword({email,password});
+      const { error: failure } = await cloud.auth.signInWithPassword({ email, password });
       setPassword('');
-      if(error){setStatus('No se pudo ingresar. Revisá las credenciales o la conexión.');return;}
-      setLogin(false);setStatus('Sesión iniciada.');
-    } catch(e) {console.error('Falló el ingreso',e);setStatus('No se pudo contactar al servicio de ingreso.');}
-    finally {setBusy(false);}
+      if (failure) { setStatus('No pudimos ingresar. Revisá el correo y la contraseña, o la conexión.'); return; }
+      setLogin(false);
+      setStatus('Sesión iniciada. Ya podés guardar tu revisión.');
+    } catch (failure) {
+      console.error('Falló el ingreso', failure);
+      setStatus('No pudimos contactar al servicio. Revisá la conexión y volvé a intentar.');
+    } finally { setBusy(false); }
   }
+
   return <>
-    <header><a className="brand" href="./"><span className="mark">S</span><span>Sentinela <strong>Selknam</strong><small>OBSERVACIÓN AMBIENTAL · TIERRA DEL FUEGO</small></span></a><div className="header-actions"><span>Primer avance</span>{cloud?<button onClick={()=>setLogin(true)}>{user?'Sesión de operador':'Ingresar'}</button>:<span className="mode">Ensayo local de revisión</span>}</div></header>
-    <main><div className="heading"><div><p className="eyebrow">ÁREA DE ANÁLISIS · 19FFV</p><h1>Observar el cambio.<br/>Orientar la revisión.</h1><p>Comparación histórica de agua y vegetación para apoyar el trabajo de operadores ambientales.</p></div><div className="area"><strong>3,69 <small>km²</small></strong><span>Recorte rectangular piloto</span><span>Centro −54,5262° · −67,3003°</span></div></div>
-    <section className="workspace" aria-label="Explorador temporal"><div className="map-column"><div className="map-header"><h2>Comparación temporal</h2><span>Sentinel-2 L2A · 10 m</span></div><div className="map-wrap">{pilot?<SpectralMap features={features} selected={selected} onSelect={select} signal={signal} swipe={swipe} show={show} extent={pilot.manifest.bounds_m}/>:<p role="status">{error||'Cargando observaciones…'}</p>}<div className="date before">08 FEB 2020</div><div className="date after">13 MAR 2026</div><span className="north">N ↑</span><div className="map-note">Falso color NIR · rojo · verde</div></div><div className="map-controls"><label htmlFor="swipe">Cortina temporal</label><input id="swipe" type="range" min="0" max="100" value={swipe} onChange={e=>setSwipe(+e.target.value)} aria-valuetext={swipe+' por ciento de la primera fecha'}/><label className="toggle"><input type="checkbox" checked={show} onChange={e=>setShow(e.target.checked)}/> Mostrar candidatos</label></div><div className="legend"><span><i className="water"/> Aumento de NDWI</span><span><i className="veg"/> Descenso de NDVI</span><span>Gris · píxel excluido</span></div><div className="coverage"><span className="dot"/><div><strong>{pilot?((pilot.manifest.common_pixels/pilot.manifest.pixels)*100).toFixed(2).replace('.',','):'—'} % de cobertura común válida</strong><p>Dos observaciones. La diferencia estacional puede influir en las señales.</p></div></div></div>
-    <aside><div className="aside-head"><p className="eyebrow">REVISIÓN DE CANDIDATOS</p><h2>{selected}</h2><span className="state">{current?.state||'Pendiente de revisión'}</span></div>{chosen&&<><div className="metrics"><div><span>Superficie del polígono</span><strong>{chosen.properties.area_m2.toLocaleString('es-AR')} <small>m²</small></strong></div><div><span>Δ NDWI</span><strong>{chosen.properties.delta_ndwi.toFixed(3)}</strong></div><div><span>Δ NDVI</span><strong>{chosen.properties.delta_ndvi.toFixed(3)}</strong></div></div><p className="caution">La causa del cambio requiere evidencia independiente. Este polígono representa una señal espectral.</p><form onSubmit={save}><label>Resultado de revisión<select value={state} onChange={e=>setState(e.target.value)}>{states.map(s=><option key={s}>{s}</option>)}</select></label><label>Motivo<textarea value={reason} onChange={e=>setReason(e.target.value)} maxLength={1000} required placeholder="Describí qué observás y qué falta verificar." rows={3}/></label><button className="primary" disabled={busy}>{busy?'Guardando…':cloud&&!user?'Ingresar para revisar':cloud?'Guardar revisión':'Guardar ensayo local'}</button></form>{current&&<p className="last-review"><strong>Última revisión · versión {current.version}</strong><br/>{current.reason}</p>}<p role="status" className="status">{status}</p></>}</aside></section>
-    <section className="catalog"><div className="catalog-top"><div><p className="eyebrow">CAMBIOS OBSERVADOS</p><h2>Explorar los polígonos</h2></div><label>Filtrar por señal<select value={signal} onChange={e=>{setSignal(e.target.value);setPage(1);}}><option value="todas">Todas las señales</option><option value="agua">Agua</option><option value="vegetacion">Vegetación</option></select></label><a className="download" href="./pilot/candidates.geojson" download>Descargar GeoJSON ↗</a></div><p className="catalog-note">{features.filter(f=>f.properties.signal==='agua').length} componentes de agua y {features.filter(f=>f.properties.signal==='vegetacion').length} de vegetación. Las capas pueden solaparse.</p><div className="candidate-grid">{shown.map(f=><button className={'candidate '+(f.properties.id===selected?'selected':'')} key={f.properties.id} onClick={()=>select(f.properties.id)}><span><i className={f.properties.signal==='agua'?'water':'veg'}/>{f.properties.id}</span><strong>{f.properties.area_m2.toLocaleString('es-AR')} m²</strong><small>{reviews.find(r=>r.candidate_id===f.properties.id)?.state||'Pendiente de revisión'}</small></button>)}</div><nav><button disabled={page===1} onClick={()=>setPage(page-1)}>Anterior</button><span>{filtered.length} resultados · Página {page} de {countPages}</span><button disabled={page===countPages} onClick={()=>setPage(page+1)}>Siguiente</button></nav></section>
-    <section className="method"><div><p className="eyebrow">TRAZABILIDAD</p><h2>De la imagen<br/>a la ficha.</h2></div><div><p>Datos abiertos Copernicus Sentinel modificados (2020 y 2026), distribuidos por Earth Search. Índices NDWI y NDVI, máscara SCL 4–6, cambio mínimo de 0,25 y componentes de cuatro píxeles o más.</p><details><summary>Ver escenas y versión del método</summary>{pilot?.manifest.scenes.map(s=><p key={s}><code>{s}</code></p>)}<p>SHA-256 del método</p><code>{pilot?.manifest.method_sha256}</code></details><p>La revisión técnica y la validación de campo permitirán evaluar errores y utilidad. El recorte cuenta con observaciones satelitales reales y carece de delimitación oficial de cuenca.</p></div></section></main><footer><strong>Sentinela Selknam</strong><span>Ambiente y Recursos Estratégicos · Primer avance</span><span>{cloud?'Revisión con Supabase':'Revisiones de ensayo guardadas en este navegador'}</span></footer>
-    {login&&<div className="modal" role="dialog" aria-modal="true" aria-label="Acceso de operadores"><form onSubmit={signIn}><h2>Ingreso de operadores</h2>{user?<><p>{user}</p><button type="button" onClick={async()=>{const {error}=await cloud!.auth.signOut();setStatus(error?'No se pudo cerrar la sesión.':'Sesión cerrada.');if(!error)setLogin(false);}}>Cerrar sesión</button></>:<><label>Correo<input type="email" value={email} onChange={e=>setEmail(e.target.value)} required autoComplete="username"/></label><label>Contraseña<input type="password" value={password} onChange={e=>setPassword(e.target.value)} required autoComplete="current-password"/></label><button disabled={busy} className="primary">Ingresar</button></>}<button type="button" onClick={()=>{setLogin(false);setPassword('');}}>Volver al mapa</button><p role="status">{status}</p></form></div>}
+    <a className="skip-link" href="#principal">Ir al contenido</a>
+    <header className="site-header">
+      <a className="brand" href="./"><span className="province-mark" aria-hidden="true" />
+        <span><strong>Sentinela Selknam</strong><span>Tierra del Fuego · Observación ambiental</span></span>
+      </a>
+      {cloud && <button className="header-button" onClick={() => setLogin(true)}>
+        {user ? 'Mi sesión' : 'Ingresar al equipo'}
+      </button>}
+    </header>
+
+    <main id="principal">
+      <div className="page-heading">
+        <div><p className="location">Área piloto de Tierra del Fuego · 3,69 km²</p>
+          <h1>Revisar cambios en el territorio</h1>
+          <p>Compará las imágenes, elegí una zona y anotá lo que observás.</p>
+        </div>
+        <details className="quick-help">
+          <summary>¿Cómo uso esta página?</summary>
+          <ol>
+            <li>Elegí <strong>Ver 2020</strong> o <strong>Ver 2026</strong> para mirar cada imagen. Con <strong>Comparar</strong> podés deslizar entre las dos.</li>
+            <li>Elegí una zona de la lista o tocá un contorno en el mapa.</li>
+            <li>Marcá una opción, escribí un motivo y presioná <strong>Guardar revisión</strong>.</li>
+          </ol>
+          <p>Para volver al encuadre inicial, usá <strong>Ver área completa</strong>.</p>
+        </details>
+      </div>
+
+      {!cloud && <p className="demo-notice"><strong>Estás en una demostración.</strong> Las imágenes son reales. Las revisiones de prueba quedan guardadas en este navegador.</p>}
+
+      {error ? <div className="error-message" role="alert"><h2>No se pudieron abrir las imágenes</h2><p>{error}</p><button onClick={() => window.location.reload()}>Volver a intentar</button></div> :
+        <div className="workbench" aria-busy={!pilot}>
+          <section className="comparison" aria-labelledby="compare-title">
+            <div className="section-heading"><span className="step" aria-hidden="true">1</span><div>
+              <h2 id="compare-title">Mirar las imágenes</h2><p>Elegí qué fecha querés ver.</p>
+            </div></div>
+            <div className="view-options" aria-label="Fecha de la imagen">
+              <button aria-pressed={view === 'before'} onClick={() => setView('before')}><strong>Ver 2020</strong><span>8 de febrero</span></button>
+              <button aria-pressed={view === 'compare'} onClick={() => setView('compare')}><strong>Comparar</strong><span>Las dos fechas</span></button>
+              <button aria-pressed={view === 'after'} onClick={() => setView('after')}><strong>Ver 2026</strong><span>13 de marzo</span></button>
+            </div>
+            <div className="image-caption" aria-live="polite">
+              {view === 'before' ? 'Estás viendo el 8 de febrero de 2020' : view === 'after' ? 'Estás viendo el 13 de marzo de 2026' : '2020 a la izquierda · 2026 a la derecha'}
+            </div>
+            <div className="map-wrap">
+              {pilot ? <SpectralMap features={features} selected={selected} onSelect={requestSelection} signal={signal}
+                swipe={swipe} show={show} extent={pilot.manifest.bounds_m} view={view} reset={reset} />
+                : <p className="loading" role="status">Cargando imágenes y zonas…</p>}
+              {view === 'compare' && <div className="curtain-line" style={{ left: swipe + '%' }} aria-hidden="true"><span>↔</span></div>}
+              <span className="north" aria-hidden="true">N ↑</span>
+              {chosen && <p className="map-selection">{zoneName(chosen)} · contorno blanco</p>}
+            </div>
+            {view === 'compare' && <div className="slider-control">
+              <label htmlFor="swipe">Mové el control para comparar las imágenes</label>
+              <div><span>2020</span><input id="swipe" type="range" min="0" max="100" value={swipe}
+                onChange={event => setSwipe(+event.target.value)} aria-valuetext={swipe + ' por ciento de la imagen de 2020'} /><span>2026</span></div>
+            </div>}
+            <div className="map-actions">
+              <button type="button" onClick={() => setReset(value => value + 1)}>Ver área completa</button>
+              <label className="check-control"><input type="checkbox" checked={show} onChange={event => setShow(event.target.checked)} /> Mostrar zonas para revisar</label>
+            </div>
+            <div className="map-legend" aria-label="Colores de las zonas">
+              <span><i className="water-key" aria-hidden="true" /> Cambios en agua</span>
+              <span><i className="vegetation-key" aria-hidden="true" /> Cambios en vegetación</span>
+            </div>
+            <details className="image-help"><summary>¿Por qué la vegetación se ve roja?</summary>
+              <p>La imagen combina bandas satelitales para facilitar la comparación. El rojo ayuda a distinguir la vegetación. El gris marca lugares que quedaron fuera de la comparación por falta de datos válidos.</p>
+              <p>Se pudo comparar el {coverage || '…'} % del área. La diferencia de estación y las sombras pueden influir en los cambios.</p>
+            </details>
+          </section>
+
+          <aside className="review-panel" aria-label="Elegir y revisar una zona">
+            {!chosen ? <>
+              <div className="section-heading"><span className="step" aria-hidden="true">2</span><div>
+                <h2 ref={listHeading} tabIndex={-1}>Elegir una zona</h2><p>Tocá una fila para abrir su ficha.</p>
+              </div></div>
+              <label className="filter-label" htmlFor="signal">¿Qué cambios querés revisar?</label>
+              <select id="signal" value={signal} onChange={event => { setSignal(event.target.value); setPage(1); }}>
+                <option value="todas">Agua y vegetación</option><option value="agua">Solo agua</option><option value="vegetacion">Solo vegetación</option>
+              </select>
+              <p className="result-count" aria-live="polite">{pilot ? filtered.length + ' zonas disponibles' : 'Cargando zonas…'}</p>
+              <ul className="zone-list">
+                {shown.map(feature => {
+                  const reviewed = reviews.some(review => review.candidate_id === feature.properties.id);
+                  return <li key={feature.properties.id}><button onClick={() => requestSelection(feature.properties.id)}>
+                    <span className="zone-description"><strong>{zoneName(feature)}</strong>
+                      <span>{feature.properties.area_m2.toLocaleString('es-AR')} m² · {reviewed ? 'Ya revisada' : 'Sin revisar'}</span>
+                    </span><span className="open-zone">Abrir →</span>
+                  </button></li>;
+                })}
+              </ul>
+              <nav className="pagination" aria-label="Páginas de zonas">
+                <button disabled={page === 1} onClick={() => setPage(value => value - 1)}>← Anterior</button>
+                <span>{page} de {pageCount}</span>
+                <button disabled={page === pageCount} onClick={() => setPage(value => value + 1)}>Siguiente →</button>
+              </nav>
+              <p className="scientific-note">Estas zonas muestran cambios en las imágenes. Para conocer su causa hace falta revisarlas.</p>
+            </> : <>
+              <button className="back-button" onClick={() => requestSelection('')} disabled={busy}>← Volver a la lista de zonas</button>
+              <h2 className="zone-title" ref={reviewHeading} tabIndex={-1}>{zoneName(chosen)}</h2>
+              <p className="zone-area">Superficie del cambio <strong>{chosen.properties.area_m2.toLocaleString('es-AR')} m²</strong></p>
+              <p className="signal-explanation">{chosen.properties.signal === 'agua'
+                ? 'Se marcó un posible aumento de agua. Compará las dos imágenes para interpretarlo.'
+                : 'Se marcó un posible cambio relacionado con la vegetación. Compará las dos imágenes para interpretarlo.'}</p>
+              <div className="section-heading review-step"><span className="step" aria-hidden="true">3</span><h3>Registrar lo observado</h3></div>
+              <form onSubmit={save}>
+                <fieldset disabled={busy}>
+                  <legend>¿Qué podés decir de esta zona?</legend>
+                  {reviewOptions.map((option, index) => <label className={'review-option ' + (state === states[index] ? 'checked' : '')} key={option.label}>
+                    <input type="radio" name="review-state" value={states[index]} checked={state === states[index]}
+                      onChange={() => { setState(states[index]); setSaved(false); }} />
+                    <span><strong>{option.label}</strong><span>{option.explanation}</span></span>
+                  </label>)}
+                </fieldset>
+                <label className="reason-label" htmlFor="reason">Motivo de la revisión</label>
+                <p className="field-hint" id="reason-hint">Escribí qué observás o qué falta comprobar.</p>
+                <textarea id="reason" ref={reasonField} value={reason} maxLength={1000} rows={3}
+                  aria-describedby="reason-hint" disabled={busy}
+                  onChange={event => { setReason(event.target.value); setSaved(false); }}
+                  placeholder="Por ejemplo, necesito otra imagen para decidir." />
+                <button className="save-button" disabled={busy}>{busy ? 'Guardando revisión…' : cloud && !user ? 'Ingresar para guardar la revisión' : cloud ? 'Guardar revisión' : 'Guardar revisión de prueba'}</button>
+              </form>
+              {status && <p className={'save-message ' + (saved ? 'success' : '')} role="status">{saved && <strong>Listo. </strong>}{status}</p>}
+              {saved && next && <button className="next-zone" onClick={() => requestSelection(next.properties.id)}>Revisar la siguiente zona →</button>}
+              {current && <details className="previous-review" open={saved}><summary>Ver la última revisión guardada</summary>
+                <p><strong>{current.state}</strong></p><p>{current.reason}</p>
+                <p>{new Date(current.at).toLocaleString('es-AR')}</p>
+              </details>}
+              <details className="technical-details"><summary>Ver datos técnicos de esta zona</summary>
+                <dl><dt>Identificador</dt><dd>{chosen.properties.id}</dd>
+                  <dt>Cambio en índice de agua (NDWI)</dt><dd>{chosen.properties.delta_ndwi.toLocaleString('es-AR', { maximumFractionDigits: 3 })}</dd>
+                  <dt>Cambio en índice de vegetación (NDVI)</dt><dd>{chosen.properties.delta_ndvi.toLocaleString('es-AR', { maximumFractionDigits: 3 })}</dd></dl>
+              </details>
+            </>}
+          </aside>
+        </div>}
+
+      <section className="analysis-information" aria-label="Información del análisis">
+        <details><summary>Datos del análisis y descarga para especialistas</summary>
+          <p>Área rectangular de 1,92 × 1,92 km en Tierra del Fuego. Imágenes Sentinel-2 L2A del 8 de febrero de 2020 y del 13 de marzo de 2026, sobre una grilla de 10 metros en UTM 19 Sur.</p>
+          <p>Se compararon {pilot?.manifest.common_pixels.toLocaleString('es-AR') || '…'} de {pilot?.manifest.pixels.toLocaleString('es-AR') || '…'} píxeles. Hay {features.filter(feature => feature.properties.signal === 'agua').length} componentes de agua y {features.filter(feature => feature.properties.signal === 'vegetacion').length} de vegetación. Las capas pueden solaparse.</p>
+          <p>Se usaron índices NDWI y NDVI, máscara SCL 4–6, un cambio mínimo de 0,25 y componentes de al menos cuatro píxeles. Los umbrales requieren validación. Un cambio espectral necesita evidencia adicional para atribuir su causa a castores.</p>
+          <a className="download-link" href="./pilot/candidates.geojson" download>Descargar las zonas en formato GeoJSON</a>
+          <h3>Escenas utilizadas</h3>{pilot?.manifest.scenes.map(scene => <p key={scene}><code>{scene}</code></p>)}
+          <h3>Versión del método</h3><code>{pilot?.manifest.method_sha256}</code>
+          <p>Contiene datos Copernicus Sentinel modificados (2020 y 2026), distribuidos por Earth Search.</p>
+        </details>
+      </section>
+    </main>
+    <footer><strong>Sentinela Selknam</strong><span>Apoyo a la revisión ambiental · Tierra del Fuego</span><span>Primer avance</span></footer>
+
+    <dialog ref={discardDialog} onClose={() => setPendingSelection(null)} aria-labelledby="discard-title">
+      <h2 id="discard-title">Tu comentario todavía no está guardado</h2>
+      <p>Podés volver a la ficha para guardarlo, o salir y descartar lo que escribiste.</p>
+      <button className="save-button" onClick={() => setPendingSelection(null)} autoFocus>Seguir escribiendo</button>
+      <button className="dialog-close" onClick={() => {
+        if (pendingSelection !== null) select(pendingSelection);
+        setPendingSelection(null);
+      }}>Descartar comentario y salir</button>
+    </dialog>
+
+    <dialog ref={loginDialog} onClose={() => { setLogin(false); setPassword(''); }} aria-labelledby="login-title">
+      <h2 id="login-title">Ingreso del equipo</h2>
+      <p>Usá la cuenta que te habilitó la persona administradora.</p>
+      {user ? <><p>Sesión de {user}</p><button onClick={async () => {
+        const { error: failure } = await cloud!.auth.signOut();
+        setStatus(failure ? 'No pudimos cerrar la sesión. Volvé a intentar.' : 'Sesión cerrada.');
+        if (!failure) setLogin(false);
+      }}>Cerrar sesión</button></> : <form onSubmit={signIn}>
+        <label htmlFor="email">Correo electrónico</label><input id="email" type="email" value={email} onChange={event => setEmail(event.target.value)} required autoComplete="username" />
+        <label htmlFor="password">Contraseña</label><input id="password" type="password" value={password} onChange={event => setPassword(event.target.value)} required autoComplete="current-password" />
+        <button className="save-button" disabled={busy}>{busy ? 'Ingresando…' : 'Ingresar'}</button>
+      </form>}
+      <button className="dialog-close" onClick={() => setLogin(false)}>Volver al mapa</button>
+      <p role="status">{status}</p>
+    </dialog>
   </>;
 }
-createRoot(document.getElementById('root')!).render(<App/>);
 
+createRoot(document.getElementById('root')!).render(<App />);

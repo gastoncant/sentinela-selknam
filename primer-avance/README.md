@@ -15,11 +15,13 @@ Entrar a la dirección Local que muestra Vite. Para distribuir como sitio estát
 
 ## Recorrido de tres minutos
 
-1. Observar ambas fechas y mover la cortina temporal sobre las mismas coordenadas.
-2. Activar y desactivar los candidatos. Hacer clic en un polígono o elegirlo desde la lista.
-3. Filtrar agua o vegetación, abrir una ficha y explicar los índices y la superficie del polígono.
-4. Escribir un motivo y guardar un ensayo local. Recargar para comprobar persistencia en ese navegador.
-5. Abrir trazabilidad y descargar el GeoJSON.
+1. Elegir **Ver 2020** o **Ver 2026**. El botón **Comparar** muestra el control para deslizar entre ambas fechas.
+2. Usar **Acercar**, **Alejar** y **Ver área completa**. La casilla **Mostrar zonas para revisar** permite alternar los contornos.
+3. Elegir un filtro y abrir una fila de la lista, o tocar una zona en el mapa. La ficha se abre con su superficie y una descripción.
+4. Marcar una opción, escribir un motivo y presionar **Guardar revisión de prueba**. La confirmación indica dónde se guardó. Un aviso permite conservar el comentario si se intenta salir sin guardarlo.
+5. Abrir los datos técnicos dentro de la ficha o el apartado **Datos del análisis y descarga para especialistas** para consultar índices, fuentes y exportar GeoJSON.
+
+La interfaz usa texto base de 18 px, botones de al menos 50 px de alto y una paleta azul, naranja y blanca inspirada en Tierra del Fuego. La tipografía Atkinson Hyperlegible Next se incluye localmente bajo su [licencia SIL OFL](src/fonts/OFL.txt).
 
 La lista ofrece una alternativa textual al mapa. Las escenas se comparan con máscara común y grilla UTM 19 Sur. Las capas pueden solaparse. Las señales requieren revisión y evidencia para atribuir una causa. Los umbrales son exploratorios.
 
