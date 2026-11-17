@@ -1,3 +1,15 @@
+# Primer avance con Supabase
+
+La entrega actual se encuentra en [primer-avance](primer-avance/README.md). Incluye React y TypeScript, Leaflet, productos Sentinel-2 reales, integración Supabase y pruebas SQL de permisos.
+
+- [Demo web](https://gastoncant.github.io/sentinela-selknam/)
+- [Documento del avance en PDF](Sentinela_Selknam_Primer_Avance.pdf)
+- [Documento editable](Sentinela_Selknam_Primer_Avance.docx)
+- [Verificación](primer-avance/VERIFICACION.md)
+
+El recorte costero de esta entrega produce 69 componentes de agua y 131 de vegetación. La demo publicada permite ensayar revisiones locales. La cuenta Supabase remota sigue pendiente de configuración. La guía incluye sus scripts y los pasos de conexión.
+
+El código y la documentación que siguen corresponden al prototipo anterior con un recorte diferente.
 # Sentinela Selknam
 
 Tablero de revisión de cambios de agua y vegetación en Tierra del Fuego. Incluye un piloto real de Sentinel-2 ya procesado. El operador alterna dos observaciones alineadas, localiza polígonos, descarga geometrías y documenta hipótesis. La organización decide si publica el producto espectral. Las revisiones y las identidades quedan en la vista privada.
