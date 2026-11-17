@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Sentinela Selknam - single host pilot
+Parameters:
+  Zone:
+    Type: AWS::EC2::AvailabilityZone::Name
+  Blueprint:
+    Type: String
+    Default: ubuntu_24_04
+  Bundle:
+    Type: String
+  KeyName:
+    Type: String
+  AdminCIDR:
+    Type: String
+    AllowedPattern: '([0-9]{1,3}\.){3}[0-9]{1,3}/32'
+Resources:
+  Host:
+    Type: AWS::Lightsail::Instance
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      InstanceName: !Sub '${AWS::StackName}-host'
+      AvailabilityZone: !Ref Zone
+      BundleId: !Ref Bundle
+      BlueprintId: !Ref Blueprint
+      KeyPairName: !Ref KeyName
+      AddOns:
+        - AddOnType: AutoSnapshot
+          AutoSnapshotAddOnRequest:
+            SnapshotTimeOfDay: '05:00'
+      Networking:
+        Ports:
+          - {FromPort: 22, ToPort: 22, Protocol: tcp, Cidrs: [!Ref AdminCIDR]}
+          - {FromPort: 80, ToPort: 80, Protocol: tcp, Cidrs: [0.0.0.0/0]}
+          - {FromPort: 443, ToPort: 443, Protocol: tcp, Cidrs: [0.0.0.0/0]}
+  Address:
+    Type: AWS::Lightsail::StaticIp
+    Properties:
+      StaticIpName: !Sub '${AWS::StackName}-ip'
+      AttachedTo: !Ref Host
+Outputs:
+  IPv4:
+    Value: !GetAtt Address.IpAddress
+

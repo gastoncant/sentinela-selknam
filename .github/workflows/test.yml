@@ -1,0 +1,20 @@
+name: Piloto
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    env:
+      LOCAL_DEMO: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -r requirements.txt -r requirements-gis.txt
+      - run: python manage.py makemigrations --check --dry-run
+      - run: python manage.py test
+      - run: python verify_restore.py
+      - run: docker build -t sentinela-pilot .
+

@@ -1,0 +1,2 @@
+{% extends "base.html" %}{% block content %}<h1>Áreas de análisis</h1>
+{% for r in runs %}<article><h2><a href="{% url 'detail' r.pk %}">Tierra del Fuego · recorte 19FFV</a></h2><p>{{ r.manifest.dates.0|slice:":10" }} y {{ r.manifest.dates.1|slice:":10" }} · {{ r.manifest.count }} polígonos de cambio</p>{% if not r.published %}<small>Acceso de la organización</small>{% endif %}</article>{% empty %}<p>No hay análisis disponibles para esta vista.</p>{% endfor %}{% endblock %}
