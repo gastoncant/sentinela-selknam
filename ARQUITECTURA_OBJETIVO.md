@@ -15,11 +15,14 @@ El alcance acordado es la Isla Grande de Tierra del Fuego. El mapa funciona como
 | Interfaz | Recorrido guiado, lista, ficha, motivo y guardado de prueba | Evaluación con operadores y lector de pantalla |
 | Supabase | Cliente Auth y SQL con RLS y revisión transaccional, probado en PostgreSQL embebido | Configurar proyecto remoto y probar con cuentas reales |
 | Persistencia de demostración | Revisiones locales y hasta seis recortes en IndexedDB | Historial compartido, auditoría y copias remotas |
+| Exportación de revisiones | Panel con PDF de la zona y CSV de las zonas revisadas del recorte. También se descargan GeoJSON, PNG y manifiesto. | Exportación compartida con permisos e historial por ejecución |
 | Publicación | GitHub Pages y código descargable | Entornos separados, despliegue institucional y operación |
 | Alertas | Arquitectura y etapas definidas aquí | Outbox, reglas, bandeja, adaptadores y destinatarios |
 | AWS | Plantilla Lightsail heredada y Terraform de referencia en `infra/terraform` | Implementar las imágenes, probar la arquitectura en una cuenta de staging y verificar costos |
 
 El piloto se conserva como producto preparado. Los nuevos recortes generan sus propias ejecuciones locales y geometrías con fechas, cobertura y trazabilidad. La validación biológica sigue pendiente. La aplicación no afirma que los cambios sean diques ni presencia confirmada de castores.
+
+El [inventario de módulos](primer-avance/MODULOS.md) describe la implementación actual. El [instructivo](primer-avance/GUIA_DE_USO.md) documenta el recorrido en la app publicada.
 
 ## Fuentes y alcance territorial
 

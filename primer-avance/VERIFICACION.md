@@ -57,3 +57,9 @@ Se reemplazó la marca por una versión con cuernos laterales, máscara ovalada,
 
 La compilación TypeScript/Vite pasó. El navegador mostró el logo cargado, Sentinela Selknam, Gobierno de TDF, Hackathon Soberanía Tech 2026 y las leyendas de derechos, licencias de terceros y alcance del prototipo. En 390 × 844, el documento midió 375 px de ancho, sin desbordamiento horizontal. La revisión también comprobó la composición del footer en escritorio. El análisis científico y sus datos no se modificaron.
 
+## Guardado y exportación de revisiones
+
+En una compilación local, se generó el recorte central, se abrió una zona desde la lista y se comprobó el foco en el formulario, la validación del motivo y la confirmación de guardado. El PDF de la zona de vegetación 461 contenía dos imágenes Sentinel-2 con el mismo contorno. Se verificaron el texto del comentario, las fechas, el estado y la composición de la página renderizada. El CSV del mismo recorte tenía una fila con el identificador, la revisión y la cobertura correspondiente.
+
+Tras agrupar las descargas, se guardó una revisión en el piloto preparado y se verificó el panel al volver a la lista y al reabrir la zona después de recargar. Desde la lista, el CSV quedó disponible y el PDF se habilitó en la ficha revisada. Pasaron ambas compilaciones, la web y la del HTML único. GitHub Pages sirvió el paquete publicado con los dos botones y el módulo PDF. Los ensayos de guardado se hicieron con almacenamiento local de prueba.
+

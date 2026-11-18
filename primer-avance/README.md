@@ -2,6 +2,8 @@
 
 Demo React + TypeScript + Leaflet con integración Supabase Auth y PostgreSQL preparada. Los productos de Sentinel-2 incluidos son reales. Las revisiones guardadas sin configurar Supabase son ensayos locales del navegador.
 
+Para usar el sitio publicado, seguí la [guía de uso](GUIA_DE_USO.md). El [inventario de módulos](MODULOS.md) vincula cada función con su código y distingue las funciones de la demo de la arquitectura futura.
+
 ## Abrir
 
 Instalar Node.js 22.12 o superior y abrir la terminal en la carpeta primer-avance.

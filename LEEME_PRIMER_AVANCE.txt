@@ -24,13 +24,17 @@ Su acceso es privado. Para el jurado usar la carpeta compartida.
 Demo pública para el jurado
 https://gastoncant.github.io/sentinela-selknam/
 
+Instructivo actualizado: primer-avance/GUIA_DE_USO.md
+Módulos de la aplicación: primer-avance/MODULOS.md
+
 Recorrido sugerido de presentación
 1. Elegir un lugar dentro del contorno de la Isla Grande o una zona de acceso rápido.
 2. Presionar Comparar este recorte y esperar la lectura de escenas Sentinel-2.
 3. Comparar las fechas efectivas, cobertura válida y cambios de agua o vegetación.
-4. Elegir una zona y guardar una revisión local con motivo.
-5. Descargar imágenes, GeoJSON y fuentes del recorte abierto.
-6. Reabrir un recorte conservado en el dispositivo o usar el piloto preparado.
+4. Tocar Elegir una zona para revisar y luego Revisar.
+5. En la ficha, tocar Ir al formulario de revisión, escribir el motivo y tocar Guardar revisión.
+6. En Descargar revisiones, elegir Informe de esta zona (PDF) o Revisiones del recorte (CSV).
+7. Reabrir un recorte conservado en el dispositivo o usar el piloto preparado.
 
 Los recortes nuevos requieren Internet y navegador moderno sobre HTTPS o
 localhost. No crean recursos AWS en la cuenta del usuario. El piloto incluido

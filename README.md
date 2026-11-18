@@ -8,6 +8,12 @@ La [propuesta DevOps en AWS](DEVOPS_AWS.md) incluye diagramas, Terraform, CI/CD 
 
 El [Terraform de referencia y su guía de validación](infra/terraform/README.md) forman parte de los próximos pasos de la presentación final. Se pueden comprobar con planes simulados sin una cuenta AWS.
 
+## Usar la aplicación
+
+Abrí la [demo pública](https://gastoncant.github.io/sentinela-selknam/) y seguí la [guía de uso](primer-avance/GUIA_DE_USO.md). Incluye cómo elegir y comparar un recorte, guardar una revisión y descargar el PDF de la zona o el CSV del recorte desde un mismo panel.
+
+Para ver la responsabilidad y el código de cada componente, consultá el [inventario de módulos](primer-avance/MODULOS.md).
+
 ## Descargar y ejecutar la demo
 
 1. Descargar el repositorio desde **Code → Download ZIP** y descomprimirlo, o clonarlo con Git.
@@ -41,8 +47,9 @@ La carpeta **docs/** incluye una compilación lista para servir desde un hosting
 - Hasta seis recortes conservados en el dispositivo para reabrirlos sin volver a descargar sus bandas.
 - Selección de polígonos en el mapa o en una lista, con filtros por agua y vegetación.
 - Fichas con superficie, índices y procedencia.
-- Ensayos de revisión guardados en el navegador.
-- Descarga de geometrías GeoJSON.
+- Revisiones con estado y motivo guardadas en el navegador.
+- Panel **Descargar revisiones**, con informe PDF de la zona y CSV de las zonas revisadas del recorte.
+- Descargas de geometrías GeoJSON, imágenes PNG y manifiesto JSON para análisis especializado.
 
 El recorte costero tiene 69 componentes de agua y 131 de vegetación, con 95,68 % de cobertura común válida. Las capas pueden solaparse y su causa requiere evidencia independiente.
 
@@ -58,8 +65,10 @@ El frontend admite únicamente la URL y la clave publicable del proyecto. Las cl
 
 ## Entrega
 
-- [Documento del avance en PDF](Sentinela_Selknam_Primer_Avance.pdf)
-- [Documento editable en Word](Sentinela_Selknam_Primer_Avance.docx)
+- [Guía de uso actual](primer-avance/GUIA_DE_USO.md)
+- [Módulos de la aplicación](primer-avance/MODULOS.md)
+- [Documento original del primer avance en PDF](Sentinela_Selknam_Primer_Avance.pdf)
+- [Documento original del primer avance en Word](Sentinela_Selknam_Primer_Avance.docx)
 - [Guía de la demo y conexión a Supabase](primer-avance/README.md)
 - [Pruebas y límites del avance](primer-avance/VERIFICACION.md)
 - [Demo pública en GitHub Pages](https://gastoncant.github.io/sentinela-selknam/)
