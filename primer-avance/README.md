@@ -17,8 +17,8 @@ Entrar a la dirección Local que muestra Vite. Para distribuir como sitio estát
 
 1. En **Elegir un recorte**, usar Zona norte, Zona central o Zona sur, o tocar un punto dentro del contorno argentino. El cuadro naranja representa 5,12 × 5,12 km.
 2. Presionar **Comparar este recorte**. La aplicación busca escenas de enero–marzo de 2020 y 2026 y procesa las bandas a 10 m en un Worker. El progreso se puede cancelar. Cada consulta tiene un límite de cuatro minutos.
-3. Al terminar, comparar las fechas efectivas con la cortina. El gris excluye píxeles sin observación válida en ambas fechas. Elegir agua o vegetación y abrir una zona para revisar su superficie y evidencia.
-4. Registrar una revisión con motivo. Los recortes bajo demanda y sus revisiones se guardan en este dispositivo. Hasta seis comparaciones quedan disponibles para reabrirlas después de recargar la página, sujeto al almacenamiento del navegador.
+3. Al terminar, comparar las fechas efectivas con la cortina. El gris excluye píxeles sin observación válida en ambas fechas. Presionar **Elegir una zona para revisar** y luego **Revisar** en una zona de la lista. Si no hay zonas detectadas, elegir otro recorte o abrir el piloto preparado.
+4. En la ficha, presionar **Ir al formulario de revisión**, elegir un estado, escribir el motivo y presionar **Guardar revisión**. Los recortes bajo demanda y sus revisiones se guardan en este dispositivo. Hasta seis comparaciones quedan disponibles para reabrirlas después de recargar la página, sujeto al almacenamiento del navegador.
 5. En **Datos del análisis y descarga para especialistas**, descargar imágenes, GeoJSON y manifiesto del recorte activo. El manifiesto conserva escenas, metadatos STAC, hashes de bandas muestreadas, grilla, fechas, método y calidad.
 6. **Abrir piloto preparado** permite ensayar el recorrido inmediatamente con el producto original de 3,69 km² y 200 componentes.
 

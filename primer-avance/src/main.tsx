@@ -220,6 +220,7 @@ function App() {
   const [pendingSelection, setPendingSelection] = useState<string | null>(null);
   const reviewHeading = useRef<HTMLHeadingElement>(null);
   const listHeading = useRef<HTMLHeadingElement>(null);
+  const formHeading = useRef<HTMLHeadingElement>(null);
   const loginDialog = useRef<HTMLDialogElement>(null);
   const discardDialog = useRef<HTMLDialogElement>(null);
   const reasonField = useRef<HTMLTextAreaElement>(null);
@@ -536,10 +537,10 @@ function App() {
           <ol>
             <li>Elegí una zona con los botones o tocá un lugar dentro del contorno de la isla.</li>
             <li>Presioná <strong>Comparar este recorte</strong>. La aplicación busca y procesa imágenes de 2020 y 2026.</li>
-            <li>Deslizá el comparador y elegí una zona de cambio para abrir su ficha.</li>
-            <li>Escribí lo que observás y presioná <strong>Guardar revisión</strong>.</li>
+            <li>Deslizá el comparador. Tocá <strong>Elegir una zona para revisar</strong> y después <strong>Revisar</strong> en una zona de la lista.</li>
+            <li>En la ficha, tocá <strong>Ir al formulario de revisión</strong>. Escribí lo que observás y presioná <strong>Guardar revisión</strong>.</li>
           </ol>
-          <p>El piloto preparado permite probar el recorrido sin esperar una descarga nueva.</p>
+          <p>Si el recorte no tiene zonas detectadas, podés elegir otro lugar o probar con el piloto preparado.</p>
         </details>
       </div>
 
@@ -585,6 +586,14 @@ function App() {
             <div className="section-heading"><span className="step" aria-hidden="true">1</span><div>
               <h2 id="compare-title" tabIndex={-1}>{pilot?.label || 'Abrir comparación'}</h2><p>El mismo lugar en dos fechas · imagen infrarroja</p>
             </div></div>
+            {pilot && <div className="review-entry">
+              {features.length > 0 ? <>
+                <button type="button" className="review-shortcut" onClick={() => (chosen ? formHeading : listHeading).current?.focus()}>
+                  {chosen ? 'Ir al formulario de revisión' : 'Elegir una zona para revisar'} ↓
+                </button>
+                {!chosen && <p>La revisión se guarda en la ficha de una zona.</p>}
+              </> : <p>Este recorte no tiene zonas para revisar. Podés elegir otro recorte para buscar cambios.</p>}
+            </div>}
             <div className="view-options" aria-label="Fecha de la imagen">
               <button aria-pressed={view === 'before'} onClick={() => setView('before')}><strong>Ver 2020</strong><span>{dateLabel(0)}</span></button>
               <button aria-pressed={view === 'compare'} onClick={() => setView('compare')}><strong>Comparar</strong><span>Las dos fechas</span></button>
@@ -632,8 +641,9 @@ function App() {
           <aside className="review-panel" aria-label="Elegir y revisar una zona">
             {!chosen ? <>
               <div className="section-heading"><span className="step" aria-hidden="true">2</span><div>
-                <h2 ref={listHeading} tabIndex={-1}>Cambios para revisar</h2><p>Abrí una zona para comparar sus dos ampliaciones.</p>
+                <h2 ref={listHeading} tabIndex={-1}>Cambios para revisar</h2><p>{features.length ? 'Tocá Revisar para abrir la ficha de una zona.' : pilot ? 'Elegí otro recorte para buscar cambios.' : 'Esperando el análisis.'}</p>
               </div></div>
+              {features.length > 0 && <>
               <label className="filter-label" htmlFor="signal">¿Qué cambios querés revisar?</label>
               <select id="signal" value={signal} onChange={event => { setSignal(event.target.value); setPage(1); }}>
                 <option value="todas">Agua y vegetación</option><option value="agua">Solo agua</option><option value="vegetacion">Solo vegetación</option>
@@ -650,7 +660,7 @@ function App() {
                   return <li key={feature.properties.id}><button onClick={() => requestSelection(feature.properties.id)}>
                     <span className={'zone-description signal-' + feature.properties.signal}><strong>{zoneName(feature)}</strong>
                       <span>{feature.properties.area_m2.toLocaleString('es-AR')} m² · {reviewed ? 'Ya revisada' : 'Sin revisar'}</span>
-                    </span><span className="open-zone">Abrir →</span>
+                    </span><span className="open-zone">Revisar →</span>
                   </button></li>;
                 })}
               </ul>
@@ -660,17 +670,21 @@ function App() {
                 <button disabled={page === pageCount} onClick={() => setPage(value => value + 1)}>Siguiente →</button>
               </nav>
               <p className="scientific-note">Estas zonas muestran cambios en las imágenes. Para conocer su causa hace falta revisarlas.</p>
+              </>}
             </> : <>
               <button className="back-button" onClick={() => requestSelection('')} disabled={busy}>← Volver a la lista de zonas</button>
               <h2 className="zone-title" ref={reviewHeading} tabIndex={-1}>{zoneName(chosen)}</h2>
+              <button type="button" className="review-shortcut zone-review-shortcut" onClick={() => formHeading.current?.focus()}>
+                Ir al formulario de revisión ↓
+              </button>
               <p className="zone-area">Superficie del cambio <strong>{chosen.properties.area_m2.toLocaleString('es-AR')} m²</strong></p>
               <p className="signal-explanation">{chosen.properties.signal === 'agua'
                 ? 'En esta superficie aumentó la señal espectral asociada al agua. Puede haber habido agua en ambas fechas: el cambio de índice no demuestra una inundación nueva. Compará las dos ampliaciones.'
                 : 'En esta superficie disminuyó el índice de vegetación. Compará el aspecto del área roja y su entorno entre las dos fechas.'}</p>
               {pilot && <EvidencePair analysis={pilot} candidate={chosen} />}
               <p className="evidence-caution">El cambio puede ser sutil en la imagen. La estación, las sombras y el nivel de agua también influyen. Para atribuirlo a castores hace falta evidencia adicional.</p>
-              <div className="section-heading review-step"><span className="step" aria-hidden="true">3</span><h3>Registrar lo observado</h3></div>
-              <form onSubmit={save}>
+              <div className="section-heading review-step"><span className="step" aria-hidden="true">3</span><h3 id="review-form-title" ref={formHeading} tabIndex={-1}>Registrar lo observado</h3></div>
+              <form onSubmit={save} aria-labelledby="review-form-title">
                 <fieldset disabled={busy}>
                   <legend>¿Qué podés decir de esta zona?</legend>
                   {reviewOptions.map((option, index) => <label className={'review-option ' + (state === states[index] ? 'checked' : '')} key={option.label}>
@@ -685,7 +699,8 @@ function App() {
                   aria-describedby="reason-hint" disabled={busy}
                   onChange={event => { setReason(event.target.value); setSaved(false); }}
                   placeholder="Por ejemplo, necesito otra imagen para decidir." />
-                <button className="save-button" disabled={busy}>{busy ? 'Guardando revisión…' : cloudForRun && !user ? 'Ingresar para guardar la revisión' : cloudForRun ? 'Guardar revisión' : 'Guardar revisión de prueba'}</button>
+                <button type="submit" className="save-button" disabled={busy}>{busy ? 'Guardando revisión…' : 'Guardar revisión'}</button>
+                <p className="review-storage-note">{cloudForRun ? user ? 'Se guarda para tu equipo.' : 'Te vamos a pedir que ingreses al equipo para guardar.' : 'Se guarda solo en este navegador.'}</p>
               </form>
               {status && <p className={'save-message ' + (saved ? 'success' : '')} role="status">{saved && <strong>Listo. </strong>}{status}</p>}
               {saved && next && <button className="next-zone" onClick={() => requestSelection(next.properties.id)}>Revisar la siguiente zona →</button>}
