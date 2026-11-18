@@ -3,34 +3,19 @@ import { createRoot } from 'react-dom/client';
 import L from 'leaflet';
 import proj4 from 'proj4';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import type { Feature, Polygon, MultiPolygon } from 'geojson';
 import 'leaflet/dist/leaflet.css';
 import './style.css';
 import './design.css';
 import { CropSelector, shortcuts } from './CropSelector';
 import CropWorker from './crop.worker?worker&inline';
-import type { Analysis } from './crop-types';
+import type { Analysis, Candidate, Review } from './crop-types';
 import { loadCrops, storeCrop } from './crop-cache';
 import { LoadingProgress, progressStage } from './LoadingProgress';
 import { EvidencePair } from './EvidencePair';
 import { ReadingGuide } from './ReadingGuide';
 import { assetUrl } from './assets';
-
-type Properties = {
-  id: string;
-  signal: 'agua' | 'vegetacion';
-  area_m2: number;
-  delta_ndwi: number;
-  delta_ndvi: number;
-};
-type Candidate = Feature<Polygon | MultiPolygon, Properties>;
-type Review = {
-  candidate_id: string;
-  state: string;
-  reason: string;
-  version: number;
-  at: string;
-};
+import { downloadExport, reviewCsv, reviewedZones, zoneName } from './review-export';
+import { ReviewReportButton } from './ReviewReportButton';
 type View = 'before' | 'compare' | 'after';
 
 const endpoint = import.meta.env.VITE_SUPABASE_URL;
@@ -46,11 +31,6 @@ const organization = '00000000-0000-4000-8000-000000000001';
 const projection = '+proj=utm +zone=19 +south +datum=WGS84 +units=m +no_defs';
 const savedKey = 'sentinela-costero-68eaf776-revisiones-v1';
 const pageSize = 6;
-
-function zoneName(candidate: Candidate) {
-  const number = candidate.properties.id.split('-').pop();
-  return `Zona de ${candidate.properties.signal === 'agua' ? 'agua' : 'vegetación'} ${number}`;
-}
 
 function readLocal(): Review[] {
   try {
@@ -434,6 +414,7 @@ function App() {
   const shown = filtered.slice((page - 1) * pageSize, page * pageSize);
   const chosen = features.find(feature => feature.properties.id === selected);
   const current = reviews.find(review => review.candidate_id === selected);
+  const exportRows = pilot ? reviewedZones(pilot, reviews) : [];
   const position = filtered.findIndex(feature => feature.properties.id === selected);
   const next = filtered[position + 1];
   const coverage = pilot ? (pilot.manifest.common_pixels / pilot.manifest.pixels * 100).toFixed(1).replace('.', ',') : '';
@@ -593,6 +574,9 @@ function App() {
                 </button>
                 {!chosen && <p>La revisión se guarda en la ficha de una zona.</p>}
               </> : <p>Este recorte no tiene zonas para revisar. Podés elegir otro recorte para buscar cambios.</p>}
+              {exportRows.length > 0 && <button type="button" className="review-shortcut csv-download" onClick={() => {
+                if (pilot) downloadExport(new Blob([reviewCsv(pilot, exportRows)], { type: 'text/csv;charset=utf-8' }), pilot.id + '-revisiones.csv');
+              }}>Descargar revisiones de este recorte (CSV) ↓</button>}
             </div>}
             <div className="view-options" aria-label="Fecha de la imagen">
               <button aria-pressed={view === 'before'} onClick={() => setView('before')}><strong>Ver 2020</strong><span>{dateLabel(0)}</span></button>
@@ -700,9 +684,10 @@ function App() {
                   onChange={event => { setReason(event.target.value); setSaved(false); }}
                   placeholder="Por ejemplo, necesito otra imagen para decidir." />
                 <button type="submit" className="save-button" disabled={busy}>{busy ? 'Guardando revisión…' : 'Guardar revisión'}</button>
-                <p className="review-storage-note">{cloudForRun ? user ? 'Se guarda para tu equipo.' : 'Te vamos a pedir que ingreses al equipo para guardar.' : 'Se guarda solo en este navegador.'}</p>
+                <p className="review-storage-note">{cloudForRun ? user ? 'Se guarda para tu equipo.' : 'Te vamos a pedir que ingreses al equipo para guardar.' : 'Para volver a verla, abrí la misma zona en este navegador. Podés descargar el informe después de guardar.'}</p>
               </form>
               {status && <p className={'save-message ' + (saved ? 'success' : '')} role="status">{saved && <strong>Listo. </strong>}{status}</p>}
+              {pilot && current && <ReviewReportButton key={chosen.properties.id} analysis={pilot} candidate={chosen} review={current} />}
               {saved && next && <button className="next-zone" onClick={() => requestSelection(next.properties.id)}>Revisar la siguiente zona →</button>}
               {current && <details className="previous-review" open={saved}><summary>Ver la última revisión guardada</summary>
                 <p><strong>{current.state}</strong></p><p>{current.reason}</p>

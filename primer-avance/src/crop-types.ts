@@ -4,6 +4,13 @@ export type Candidate = Feature<Polygon | MultiPolygon, {
   id: string; signal: 'agua' | 'vegetacion'; area_m2: number;
   delta_ndwi: number; delta_ndvi: number;
 }>;
+export type Review = {
+  candidate_id: string;
+  state: string;
+  reason: string;
+  version: number;
+  at: string;
+};
 export type Analysis = {
   id: string;
   label: string;
