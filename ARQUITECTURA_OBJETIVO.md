@@ -60,30 +60,7 @@ Primero se configura Supabase, se aplican las migraciones existentes, se habilit
 
 ## Arquitectura administrada objetivo en AWS
 
-```mermaid
-flowchart TB
-    U[Operador o visitante] --> WEB[CloudFront y S3 privado para la web]
-    WEB --> ID[Amazon Cognito]
-    WEB --> API[FastAPI en ECS Fargate]
-    API --> DB[RDS PostgreSQL y PostGIS]
-    API --> JOBS[SQS de solicitudes]
-    SCHED[EventBridge Scheduler] --> JOBS
-    JOBS --> WORK[Contenedores Python por lotes]
-    WORK --> CATALOG[Catálogos y escenas satelitales]
-    WORK --> DATA[S3 de insumos y productos]
-    WORK --> DB
-    API --> DATA
-    DB --> OUT[Despachador de outbox]
-    OUT --> SNS[Amazon SNS]
-    SNS --> Q1[SQS correo]
-    SNS --> Q2[SQS Slack]
-    SNS --> Q3[SQS WhatsApp]
-    Q1 --> L1[Lambda y SES]
-    Q2 --> L2[Lambda y webhook Slack]
-    Q3 --> L3[Lambda y AWS End User Messaging Social]
-```
-
-CloudWatch concentra métricas y registros. Secrets Manager y roles IAM administran secretos y permisos de procesos. Cada cola tiene reintentos acotados y una DLQ para fallos que requieren revisión. La infraestructura se versiona con Terraform o CloudFormation y se entrega con GitHub Actions y OIDC.
+La [propuesta DevOps en AWS](DEVOPS_AWS.md) contiene el diagrama de infraestructura y el flujo CI/CD. Propone Terraform, CodePipeline y CodeBuild desde GitHub, con GitHub Actions y OIDC como alternativa completa. CodeDeploy se reserva para la variante blue/green de la API. CloudWatch concentra métricas y registros, con Grafana y Prometheus como ampliaciones según el uso.
 
 La API valida identidad, organización, rol, propiedad del recurso y cuotas. Los tokens Cognito deben comprobar emisor y audiencia. La consulta pública devuelve solo los campos publicados. Los productos privados usan acceso autorizado o URL firmadas de vigencia limitada. Los rásteres grandes se sirven desde almacenamiento de objetos y teselas.
 
@@ -207,6 +184,8 @@ Base y productos tienen políticas de respaldo, retención y acceso. Se proponen
 Las alarmas técnicas abarcan fallos, edad de tareas, DLQ, tiempo de proceso, cobertura insuficiente, errores de API, almacenamiento y gasto. Cada alarma necesita responsable y acción en el manual operativo.
 
 ## Presupuesto y decisiones pendientes
+
+El [presupuesto AWS](DEVOPS_AWS.md#presupuesto-de-referencia) desglosa puesta en marcha y operación de tres escenarios: demo estática, piloto administrado y base de producción redundante. Dimensiona un piloto de 100 recortes por mes.
 
 El prototipo puede tener desembolso incremental cero con datos abiertos, equipo local y planes gratuitos dentro de sus cuotas. La operación del sector argentino de la isla debe estimar escenas y productos almacenados, cómputo, transferencia, base, copias y avisos por canal. Las tarifas y elegibilidad se verifican en la cuenta y región elegidas.
 

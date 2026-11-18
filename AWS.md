@@ -1,5 +1,7 @@
 # Operación en AWS
 
+Esta guía corresponde al prototipo histórico de Lightsail. Para la arquitectura administrada con Terraform, CI/CD, observabilidad y el presupuesto del piloto actual, consultá [Arquitectura DevOps en AWS](DEVOPS_AWS.md).
+
 ## Perfil implementado
 
 Una instancia Lightsail aloja Caddy, Gunicorn, Django y una base SQLite persistente. El procesamiento geográfico corre por lotes en una máquina de análisis. La web sirve productos de tamaño acotado, precalculados. Una sola instancia y un solo proceso Gunicorn con cuatro hilos permiten validar el recorrido sin montar un clúster. Un fallo del host implica indisponibilidad. La cuenta, región y dominio de destino siguen sin verificar.

@@ -4,6 +4,8 @@ Primer avance de un tablero ambiental para Tierra del Fuego. La demo actual usa 
 
 La aplicación permite seleccionar un punto del sector argentino de la Isla Grande y comparar un recorte de 5,12 × 5,12 km con Sentinel-2 a 10 m. Busca observaciones de enero–marzo de 2020 y 2026, lee las bandas necesarias y calcula cambios de agua y vegetación en el navegador. El piloto preparado sigue disponible para una presentación inmediata. La [arquitectura objetivo](ARQUITECTURA_OBJETIVO.md) conserva la futura implementación institucional y las alertas.
 
+La [propuesta DevOps en AWS](DEVOPS_AWS.md) incluye diagramas, Terraform, CI/CD desde GitHub, observabilidad y un presupuesto desglosado de puesta en marcha y operación.
+
 ## Descargar y ejecutar la demo
 
 1. Descargar el repositorio desde **Code → Download ZIP** y descomprimirlo, o clonarlo con Git.
