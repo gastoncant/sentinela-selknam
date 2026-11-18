@@ -1,0 +1,13 @@
+# Replace the illustrative account and digests before any deployment.
+environment       = "staging"
+profile           = "pilot"
+region            = "us-west-2"
+schedule_enabled  = false
+monthly_budget_usd = 50
+api_image = "111122223333.dkr.ecr.us-west-2.amazonaws.com/sentinela-staging/api@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+lambda_images = {
+  planner = "111122223333.dkr.ecr.us-west-2.amazonaws.com/sentinela-staging/lambda@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  gis     = "111122223333.dkr.ecr.us-west-2.amazonaws.com/sentinela-staging/lambda@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  ingest  = "111122223333.dkr.ecr.us-west-2.amazonaws.com/sentinela-staging/lambda@sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  probe   = "111122223333.dkr.ecr.us-west-2.amazonaws.com/sentinela-staging/lambda@sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+}

@@ -1,0 +1,9 @@
+version: 0.0
+Resources:
+  - GisFunction:
+      Type: AWS::Lambda::Function
+      Properties:
+        Name: REPLACE_WITH_FUNCTION_NAME
+        Alias: live
+        CurrentVersion: REPLACE_WITH_CURRENT_VERSION
+        TargetVersion: REPLACE_WITH_TARGET_VERSION

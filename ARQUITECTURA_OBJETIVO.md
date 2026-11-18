@@ -17,7 +17,7 @@ El alcance acordado es la Isla Grande de Tierra del Fuego. El mapa funciona como
 | Persistencia de demostración | Revisiones locales y hasta seis recortes en IndexedDB | Historial compartido, auditoría y copias remotas |
 | Publicación | GitHub Pages y código descargable | Entornos separados, despliegue institucional y operación |
 | Alertas | Arquitectura y etapas definidas aquí | Outbox, reglas, bandeja, adaptadores y destinatarios |
-| AWS | Plantilla inicial Lightsail del prototipo anterior | Desplegar y probar la arquitectura administrada propuesta |
+| AWS | Plantilla Lightsail heredada y Terraform de referencia en `infra/terraform` | Implementar las imágenes, probar la arquitectura en una cuenta de staging y verificar costos |
 
 El piloto se conserva como producto preparado. Los nuevos recortes generan sus propias ejecuciones locales y geometrías con fechas, cobertura y trazabilidad. La validación biológica sigue pendiente. La aplicación no afirma que los cambios sean diques ni presencia confirmada de castores.
 
@@ -56,17 +56,19 @@ flowchart LR
 
 Esta etapa permite validar el flujo con un equipo pequeño. Las operaciones privadas usan sesión autenticada y RLS. Procesador y despachador se ejecutan del lado servidor y mantienen allí sus credenciales. La continuidad de Supabase Free requiere revisar cuotas y condiciones de pausa. [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), [Planes y cuotas](https://supabase.com/pricing)
 
+Como primera etapa con usuarios reales, se propone conservar Supabase y sumar un worker GIS Lambda en `us-west-2` si se necesita procesar en el servidor. El worker entregaría productos a S3 y resultados a Supabase con permisos de servidor. Antes, probar Supabase remoto y portar el trabajador. La migración integral a AWS responde a requisitos institucionales de control, datos u operación.
+
 Primero se configura Supabase, se aplican las migraciones existentes, se habilitan operadores y se comprueba aislamiento entre dos organizaciones. Luego se agrega una migración versionada para áreas, escenas, ejecuciones y publicaciones. El piloto recibe una ejecución de origen y sus identificadores anteriores se conservan como alias, manteniendo sus revisiones y exportaciones.
 
 ## Arquitectura administrada objetivo en AWS
 
-La [propuesta DevOps en AWS](DEVOPS_AWS.md) contiene el diagrama de infraestructura y el flujo CI/CD. Propone Terraform, CodePipeline y CodeBuild desde GitHub, con GitHub Actions y OIDC como alternativa completa. CodeDeploy se reserva para la variante blue/green de la API. CloudWatch concentra métricas y registros, con Grafana y Prometheus como ampliaciones según el uso.
+La [propuesta DevOps en AWS](DEVOPS_AWS.md) y el [Terraform de referencia](infra/terraform/README.md) describen el piloto administrado en `us-west-2`. Usan HTTP API, Cloud Map y una API Fargate, sin NAT ni ALB. Lambda procesa los recortes y otra Lambda ingiere sus manifiestos en RDS privado. GitHub Actions con OIDC es el camino principal. CodePipeline y CodeBuild son una variante de publicación del frontend, y CodeDeploy permite ensayar una liberación canaria de la Lambda GIS. CloudWatch concentra métricas y registros, con Grafana y Prometheus como ampliaciones.
 
 La API valida identidad, organización, rol, propiedad del recurso y cuotas. Los tokens Cognito deben comprobar emisor y audiencia. La consulta pública devuelve solo los campos publicados. Los productos privados usan acceso autorizado o URL firmadas de vigencia limitada. Los rásteres grandes se sirven desde almacenamiento de objetos y teselas.
 
-La base queda en red privada. La red debe presupuestar egreso, NAT, IPv4, balanceador y tráfico de ráster. La concurrencia se limita según el presupuesto. Región, capacidad, alta disponibilidad y retención se eligen después de medir ejecuciones y verificar requisitos institucionales.
+La base queda en red privada. El perfil piloto presupone salida HTTPS por la IPv4 de la tarea Fargate y un gateway endpoint de S3 para la ingesta. Presupuestar costo por IP, egreso y transferencia entre zonas. NAT, balanceador y endpoints adicionales se cotizan si cambian las políticas institucionales. La concurrencia se limita según el presupuesto.
 
-La migración desde Supabase requiere inventario, copia verificada, correspondencia de identidades, ensayo de permisos y restauración. El contexto Auth de las políticas Supabase debe adaptarse al migrar a RDS. El servidor y los roles mínimos deben conservar las mismas garantías de acceso.
+La migración desde Supabase requiere inventario, copia verificada, correspondencia de identidades, ensayo de permisos y restauración. En RDS, sustituir `auth.uid()` y `auth.jwt()` por contexto de transacción establecido por la API tras verificar identidad y membresía. Aplicar RLS a roles de aplicación sin privilegios de bypass y repetir las pruebas de aislamiento con dos organizaciones contra RDS.
 
 ## Procesamiento del sector argentino de la isla reproducible
 

@@ -1,0 +1,49 @@
+name: Example - release web to AWS
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        required: true
+        type: choice
+        options: [staging, prod]
+permissions:
+  contents: read
+concurrency:
+  group: sentinela-web-${{ inputs.environment }}
+  cancel-in-progress: false
+jobs:
+  release:
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: primer-avance/package-lock.json
+      - working-directory: primer-avance
+        run: |
+          npm ci
+          npm run build
+          node verify-db.mjs
+          node verify-province.mjs
+          node verify-crop.mjs
+      - name: Obtain temporary AWS credentials
+        uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df
+        with:
+          role-to-assume: ${{ vars.AWS_WEB_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - working-directory: primer-avance/dist
+        env:
+          WEB_BUCKET: ${{ vars.WEB_BUCKET }}
+          DISTRIBUTION_ID: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}
+        run: |
+          aws s3 cp . "s3://$WEB_BUCKET/" --recursive --exclude index.html --exclude 'assets/*' --cache-control 'no-cache'
+          aws s3 cp ./assets "s3://$WEB_BUCKET/assets/" --recursive --cache-control 'public,max-age=31536000,immutable'
+          aws s3 cp ./index.html "s3://$WEB_BUCKET/index.html" --content-type text/html --cache-control 'no-cache'
+          aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" --paths / /index.html

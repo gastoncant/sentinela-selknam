@@ -6,6 +6,8 @@ La aplicación permite seleccionar un punto del sector argentino de la Isla Gran
 
 La [propuesta DevOps en AWS](DEVOPS_AWS.md) incluye diagramas, Terraform, CI/CD desde GitHub, observabilidad y un presupuesto desglosado de puesta en marcha y operación.
 
+El [Terraform de referencia y su guía de validación](infra/terraform/README.md) forman parte de los próximos pasos de la presentación final. Se pueden comprobar con planes simulados sin una cuenta AWS.
+
 ## Descargar y ejecutar la demo
 
 1. Descargar el repositorio desde **Code → Download ZIP** y descomprimirlo, o clonarlo con Git.

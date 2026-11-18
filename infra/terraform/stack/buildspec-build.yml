@@ -1,0 +1,17 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      nodejs: 24
+  build:
+    commands:
+      - cd "$CODEBUILD_SRC_DIR/primer-avance"
+      - npm ci
+      - npm run build
+      - node verify-db.mjs
+      - node verify-province.mjs
+      - node verify-crop.mjs
+artifacts:
+  base-directory: primer-avance/dist
+  files:
+    - '**/*'
