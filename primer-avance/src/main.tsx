@@ -16,6 +16,7 @@ import { ReadingGuide } from './ReadingGuide';
 import { assetUrl } from './assets';
 import { reviewedZones, zoneName } from './review-export';
 import { ReviewExports } from './ReviewExports';
+import { reviewQueue, type ReviewOrder } from './review-queue';
 type View = 'before' | 'compare' | 'after';
 
 const endpoint = import.meta.env.VITE_SUPABASE_URL;
@@ -180,7 +181,8 @@ function App() {
   const [pilot, setPilot] = useState<Analysis | null>(null);
   const [error, setError] = useState('');
   const [signal, setSignal] = useState('todas');
-  const [order, setOrder] = useState('area');
+  const [order, setOrder] = useState<ReviewOrder>('area');
+  const [pendingOnly, setPendingOnly] = useState(false);
   const [selected, setSelected] = useState('');
   const [page, setPage] = useState(1);
   const [view, setView] = useState<View>('compare');
@@ -232,6 +234,7 @@ function App() {
     activeRun.current = analysis.id;
     setPilot(analysis); setScope('pilot'); setSelected(''); setReason('');
     setStatus(''); setSaved(false); setPage(1); setSignal('todas'); setView('compare');
+    setPendingOnly(false);
     if (!cloud || analysis.id !== 'pilot') setReviews(readLocal());
     else void loadReviews();
     requestAnimationFrame(() => document.getElementById('compare-title')?.focus());
@@ -407,11 +410,10 @@ function App() {
   }, [pendingSelection]);
 
   const features = pilot?.features || [];
-  const filtered = features.filter(feature => signal === 'todas' || feature.properties.signal === signal)
-    .sort((a, b) => order === 'area' ? b.properties.area_m2 - a.properties.area_m2
-      : Number(a.properties.id.split('-').pop()) - Number(b.properties.id.split('-').pop()));
+  const filtered = reviewQueue(features, reviews, signal, order, pendingOnly);
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const shown = filtered.slice((page - 1) * pageSize, page * pageSize);
+  const visiblePage = Math.min(page, pageCount);
+  const shown = filtered.slice((visiblePage - 1) * pageSize, visiblePage * pageSize);
   const chosen = features.find(feature => feature.properties.id === selected);
   const current = reviews.find(review => review.candidate_id === selected);
   const exportRows = pilot ? reviewedZones(pilot, reviews) : [];
@@ -633,11 +635,15 @@ function App() {
                 <option value="todas">Agua y vegetación</option><option value="agua">Solo agua</option><option value="vegetacion">Solo vegetación</option>
               </select>
               <label className="filter-label order-label" htmlFor="order">Orden de la lista</label>
-              <select id="order" value={order} onChange={event => { setOrder(event.target.value); setPage(1); }}>
-                <option value="area">Mayor superficie primero</option><option value="number">Número de zona</option>
+              <select id="order" value={order} onChange={event => { setOrder(event.target.value as ReviewOrder); setPage(1); }}>
+                <option value="area">Mayor superficie primero</option>
+                <option value="intensity">Mayor cambio de señal primero</option>
+                <option value="number">Número de zona</option>
               </select>
-              <p className="sort-hint">La superficie no indica gravedad ni prioridad de intervención.</p>
+              <label className="check-control order-label"><input type="checkbox" checked={pendingOnly} onChange={event => { setPendingOnly(event.target.checked); setPage(1); }} /> Solo zonas pendientes</label>
+              <p className="sort-hint">El tamaño y el cambio de señal ayudan a ordenar la lista. La prioridad de inspección requiere evidencia.</p>
               <p className="result-count" aria-live="polite">{pilot ? filtered.length + ' zonas disponibles' : 'Cargando zonas…'}</p>
+              {filtered.length === 0 && <p className="sort-hint">No hay zonas con esos filtros. Podés cambiar la selección.</p>}
               <ul className="zone-list">
                 {shown.map(feature => {
                   const reviewed = reviews.some(review => review.candidate_id === feature.properties.id);
@@ -649,9 +655,9 @@ function App() {
                 })}
               </ul>
               <nav className="pagination" aria-label="Páginas de zonas">
-                <button disabled={page === 1} onClick={() => setPage(value => value - 1)}>← Anterior</button>
-                <span>{page} de {pageCount}</span>
-                <button disabled={page === pageCount} onClick={() => setPage(value => value + 1)}>Siguiente →</button>
+                <button disabled={visiblePage === 1} onClick={() => setPage(visiblePage - 1)}>← Anterior</button>
+                <span>{visiblePage} de {pageCount}</span>
+                <button disabled={visiblePage === pageCount} onClick={() => setPage(visiblePage + 1)}>Siguiente →</button>
               </nav>
               <p className="scientific-note">Estas zonas muestran cambios en las imágenes. Para conocer su causa hace falta revisarlas.</p>
               </>}
@@ -688,7 +694,7 @@ function App() {
               </form>
               {status && <p className={'save-message ' + (saved ? 'success' : '')} role="status">{saved && <strong>Listo. </strong>}{status}</p>}
               {reviewExports}
-              {saved && next && <button className="next-zone" onClick={() => requestSelection(next.properties.id)}>Revisar la siguiente zona →</button>}
+              {saved && next && <button className="next-zone" onClick={() => requestSelection(next.properties.id)}>{pendingOnly ? 'Revisar otra zona pendiente' : 'Revisar la siguiente zona'} →</button>}
               {current && <details className="previous-review" open={saved}><summary>Ver la última revisión guardada</summary>
                 <p><strong>{current.state}</strong></p><p>{current.reason}</p>
                 <p>{new Date(current.at).toLocaleString('es-AR')}</p>

@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import proj4 from 'proj4';
+import { cropIdentity, sha256 } from './src/run-identity.ts';
+import { reviewQueue } from './src/review-queue.ts';
 import { analyse, measure, index, cropGrid, cellRings, UTM } from './src/crop-analysis.ts';
 
 assert(Number.isNaN(index(0, 0)));
@@ -45,4 +47,19 @@ assert.throws(() => analyse(base(), base(), grid, 'wrong', 9), /Grilla incompati
 const diagonal = base();
 for (const i of [0, 1, 8, 9, 18, 19, 26, 27]) diagonal.green[i] = 0.6;
 assert.equal(analyse(base(), diagonal, grid, 'diagonal', size).features.length, 2);
+const bytes = new Uint8Array([0, 1, 2]);
+const first = await sha256(bytes);
+const scene = { id: 'mismo-id', date: '2026-03-13', bands: { red: first, nir: 'otra-banda' } };
+const id = await cropIdentity('metodo', grid, [scene]);
+assert.equal(id, await cropIdentity('metodo', grid, [{ ...scene, bands: { nir: 'otra-banda', red: first } }]));
+bytes[1] = 3;
+assert.notEqual(id, await cropIdentity('metodo', grid, [{ ...scene, bands: { ...scene.bands, red: await sha256(bytes) } }]));
+assert.notEqual(id, await cropIdentity('metodo', grid, [{ ...scene, date: '2026-03-14' }]));
+const [waterZone, vegetationZone] = result.features;
+const reviewed = [{ candidate_id: waterZone.properties.id }];
+assert.deepEqual(reviewQueue(result.features, reviewed, 'todas', 'area', true), [vegetationZone]);
+const larger = { ...vegetationZone, properties: { ...vegetationZone.properties, area_m2: 500 } };
+assert.deepEqual(reviewQueue([waterZone, larger], [], 'todas', 'area', false), [larger, waterZone]);
+assert.deepEqual(reviewQueue([waterZone, larger], [], 'todas', 'intensity', false), [waterZone, larger]);
+assert.deepEqual(reviewQueue([waterZone, larger], [], 'vegetacion', 'intensity', false), [larger]);
 console.log('OK · grilla 10 m · índices · nubes y nodata · ruido · conectividad · áreas y huecos · IDs por ejecución');

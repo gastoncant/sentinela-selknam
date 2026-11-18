@@ -13,6 +13,7 @@ El [Terraform de referencia y su guía de validación](infra/terraform/README.md
 Abrí la [demo pública](https://gastoncant.github.io/sentinela-selknam/) y seguí la [guía de uso](primer-avance/GUIA_DE_USO.md). Incluye cómo elegir y comparar un recorte, guardar una revisión y descargar el PDF de la zona o el CSV del recorte desde un mismo panel.
 
 Para ver la responsabilidad y el código de cada componente, consultá el [inventario de módulos](primer-avance/MODULOS.md).
+La [pauta de validación](primer-avance/VALIDACION_FINAL.md) detalla qué se probó y cómo contrastarlo con evidencia de campo.
 
 ## Descargar y ejecutar la demo
 

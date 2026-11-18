@@ -63,3 +63,9 @@ En una compilación local, se generó el recorte central, se abrió una zona des
 
 Tras agrupar las descargas, se guardó una revisión en el piloto preparado y se verificó el panel al volver a la lista y al reabrir la zona después de recargar. Desde la lista, el CSV quedó disponible y el PDF se habilitó en la ficha revisada. Pasaron ambas compilaciones, la web y la del HTML único. GitHub Pages sirvió el paquete publicado con los dos botones y el módulo PDF. Los ensayos de guardado se hicieron con almacenamiento local de prueba.
 
+## Prioridad de lectura y huella del recorte
+
+En el navegador se verificaron el orden por cambio de señal, el filtro de pendientes y la transición de 200 a 199 zonas pendientes al guardar la revisión de la zona de agua 60. La ficha siguió disponible para descargar el PDF y el CSV. Se procesó de nuevo el recorte central con las escenas públicas. Conservó el 92,7 % de cobertura común y 656 zonas, y el nombre del manifiesto incluyó el nuevo identificador de 32 caracteres hexadecimales.
+
+`node verify-crop.mjs` cubre la conservación del identificador si solo cambia el orden de las claves de banda, la separación al cambiar los bytes de una banda bajo el mismo ID de escena, la separación al cambiar la fecha y el orden y filtro de zonas de la lista. Son verificaciones de la app. El contraste con evidencia contemporánea de campo sigue la [pauta de validación](VALIDACION_FINAL.md).
+

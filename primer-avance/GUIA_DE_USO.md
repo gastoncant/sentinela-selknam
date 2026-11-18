@@ -28,6 +28,7 @@ Mirá el porcentaje de **superficie comparable** para saber qué parte pudo usar
 ## 3. Guardá una revisión
 
 1. Tocá **Elegir una zona para revisar** y después **Revisar** en la lista. También podés tocar un contorno en el mapa. Si la lista es larga, filtrá por agua o vegetación.
+   Podés activar **Solo zonas pendientes** y ordenar por **Mayor cambio de señal primero**. El orden ayuda a organizar la revisión y la decisión de inspeccionar requiere evidencia adicional.
 2. En la ficha, mirá las dos ampliaciones. El encuadre y el contorno son los mismos en ambas fechas.
 3. Tocá **Ir al formulario de revisión**. Elegí **Puede ser compatible con castores**, **Parece otra causa** o **Falta información**.
 4. En **Motivo de la revisión**, escribí qué observás o qué falta comprobar. Tocá **Guardar revisión** y esperá la confirmación.

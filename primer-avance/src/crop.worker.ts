@@ -4,9 +4,9 @@ import { analyse, measure, cropGrid, METHOD, SIZE, RES, UTM, type Bands } from '
 import type { CropRequest, Scene } from './crop-types';
 import methodSource from './crop-analysis.ts?raw';
 import processorSource from './crop.worker.ts?raw';
+import { cropIdentity, sha256 } from './run-identity';
 
 const report = (message: string) => self.postMessage({ type: 'progress', message });
-const sha = async (bytes: BufferSource) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map(n => n.toString(16).padStart(2, '0')).join('');
 
 async function search(center: number[], year: number): Promise<Scene[]> {
   const url = new URL('https://earth-search.aws.element84.com/v1/search');
@@ -99,19 +99,22 @@ self.onmessage = async (event: MessageEvent<CropRequest>) => {
     const [itemsBefore, itemsAfter] = await Promise.all([search(center, 2020), search(center, 2026)]);
     const before = await choose(itemsBefore, bounds, 2020), after = await choose(itemsAfter, bounds, 2026);
     report('Comparando agua y vegetación a 10 metros…');
-    const methodHash = await sha(new TextEncoder().encode(methodSource + '\n' + processorSource));
-    const signature = JSON.stringify({ method: METHOD, method_sha256: methodHash, bounds, scenes: [before.item.id, after.item.id] });
-    const id = 'recorte-' + (await sha(new TextEncoder().encode(signature))).slice(0, 16);
+    const methodHash = await sha256(new TextEncoder().encode(methodSource + '\n' + processorSource));
+    const sourceMetadata = [before.item, after.item];
+    const pixelHashes = await Promise.all([before, after].map(async scene => Object.fromEntries(
+      await Promise.all(Object.entries(scene.bands).map(async ([name, array]) => [name, await sha256(array.buffer as ArrayBuffer)]))
+    )));
+    const id = await cropIdentity(methodHash, bounds, sourceMetadata.map((item, index) => ({
+      id: item.id, date: item.properties.datetime, bands: pixelHashes[index],
+    })));
     const result = analyse(before.bands, after.bands, bounds, id);
     if (!result.commonPixels) throw new Error('Las dos observaciones no tienen superficie válida en común. Elegí otro recorte.');
-    const sourceMetadata = [before.item, after.item];
-    const sourceHashes = await Promise.all(sourceMetadata.map(item => sha(new TextEncoder().encode(JSON.stringify(item)))));
-    const pixelHashes = await Promise.all([before, after].map(async scene => Object.fromEntries(await Promise.all(Object.entries(scene.bands).map(async ([name, array]) => [name, await sha(array.buffer as ArrayBuffer)])))));
+    const sourceHashes = await Promise.all(sourceMetadata.map(item => sha256(new TextEncoder().encode(JSON.stringify(item)))));
     const manifest = { center, bounds_m: bounds, crs: 32719, size: SIZE, resolution_m: RES,
       scenes: sourceMetadata.map(item => item.id), dates: sourceMetadata.map(item => item.properties.datetime),
       common_pixels: result.commonPixels, pixels: SIZE * SIZE, method_sha256: methodHash,
       method_version: METHOD, threshold: 0.25, min_pixels: 4, count: result.features.length,
-      source_metadata: sourceMetadata, source_hashes: sourceHashes, sampled_band_sha256: pixelHashes,
+      identity_version: 2, source_metadata: sourceMetadata, source_hashes: sourceHashes, sampled_band_sha256: pixelHashes,
       floating_point: 'IEEE 754 float64, bandas calibradas e índices sin redondeo intermedio',
       season_windows: ['2020-01-01/2020-03-31', '2026-01-01/2026-03-31'],
       selection: 'Menor nubosidad de catálogo, hasta cuatro escenas por temporada; primera con >=97% SCL válida o la mejor entre las examinadas.',
