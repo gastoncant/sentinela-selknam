@@ -24,8 +24,10 @@ Entrar a la dirección Local que muestra Vite. Para distribuir como sitio estát
 
 Las revisiones locales quedan en el almacenamiento del sitio (`localStorage`) del navegador y perfil en uso. Al abrir el mismo recorte y zona se muestran en **Ver la última revisión guardada**. Los recortes recientes se conservan en IndexedDB. Cambiar de navegador, perfil, dispositivo o dirección del sitio no transfiere lo guardado. Borrar los datos del sitio elimina las copias locales.
 
-- **Descargar informe (PDF)** aparece al guardar una revisión. Incluye las dos imágenes ampliadas de la zona con el mismo contorno, sus fechas, escena, superficie, cobertura y el último estado y comentario guardados.
-- **Descargar revisiones de este recorte (CSV)** aparece arriba de la comparación si hay al menos una revisión. Genera una fila por zona revisada con identificadores, métricas, fechas, estado y comentario. Usa UTF-8, punto y coma y coma decimal para Excel en español. Se puede vincular con el GeoJSON por `zona_id` y la propiedad `id` de cada geometría. El GeoJSON conserva los contornos para QGIS u otra herramienta GIS.
+**Descargar revisiones** reúne ambas opciones en el panel de revisión cuando hay al menos una zona revisada.
+
+- **Informe de esta zona (PDF)** se habilita al abrir una zona con revisión guardada. Incluye las dos imágenes ampliadas con el mismo contorno, fechas, escenas, superficie, cobertura, estado y comentario guardados.
+- **Revisiones del recorte (CSV)** genera una fila por zona revisada con identificadores, métricas, fechas, estado y comentario. Usa UTF-8, punto y coma y coma decimal para Excel en español. Se puede vincular con el GeoJSON por `zona_id` y la propiedad `id` de cada geometría. El GeoJSON conserva los contornos para QGIS u otra herramienta GIS.
 
 Las consultas nuevas necesitan Internet, CORS del catálogo y del almacenamiento satelital, Web Workers, OffscreenCanvas y Web Crypto en un navegador moderno sobre HTTPS o localhost. El archivo HTML único conserva el piloto; la apertura directa file:// continúa sin comprobar. La selección cartográfica usa un contorno IGN generalizado para orientación y no representa una cobertura previamente procesada.
 

@@ -19,9 +19,9 @@ h1 { font-weight: 700; color: #163c54; letter-spacing: -0.6px; }
 .review-shortcut { border: 1px solid #185d7e; color: #164b69; background: #edf5f9; min-height: 48px; padding: 9px 13px; }
 .review-shortcut:hover:not(:disabled) { background: #deedf5; }
 .zone-review-shortcut { margin-bottom: 14px; }
-.csv-download { margin-top: 10px; }
-.pdf-download { margin-top: 14px; }
-.pdf-download .review-shortcut { width: 100%; }
+.review-exports { margin: 15px 0 20px; padding: 15px; border: 1px solid #cbd6dd; border-radius: 5px; background: #f8fafb; }
+.review-exports h3 { margin: 0; font-size: 1.1rem; }
+.review-exports .review-shortcut { width: 100%; margin-top: 12px; text-align: left; }
 .crop-workbench .map-wrap { height: 580px; }
 .basemap-options { position: absolute; top: 74px; left: 12px; z-index: 600; display: flex; flex-wrap: wrap; gap: 5px; }
 .basemap-options button { background: #fff; border: 1px solid #6e899c; font-size: 0.9rem; min-height: 50px; padding: 8px 12px; box-shadow: 0 1px 5px #14202d25; }

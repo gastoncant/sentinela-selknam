@@ -14,8 +14,8 @@ import { LoadingProgress, progressStage } from './LoadingProgress';
 import { EvidencePair } from './EvidencePair';
 import { ReadingGuide } from './ReadingGuide';
 import { assetUrl } from './assets';
-import { downloadExport, reviewCsv, reviewedZones, zoneName } from './review-export';
-import { ReviewReportButton } from './ReviewReportButton';
+import { reviewedZones, zoneName } from './review-export';
+import { ReviewExports } from './ReviewExports';
 type View = 'before' | 'compare' | 'after';
 
 const endpoint = import.meta.env.VITE_SUPABASE_URL;
@@ -415,6 +415,8 @@ function App() {
   const chosen = features.find(feature => feature.properties.id === selected);
   const current = reviews.find(review => review.candidate_id === selected);
   const exportRows = pilot ? reviewedZones(pilot, reviews) : [];
+  const reviewExports = pilot && exportRows.length > 0 &&
+    <ReviewExports key={selected} analysis={pilot} candidate={chosen} review={current} rows={exportRows} />;
   const position = filtered.findIndex(feature => feature.properties.id === selected);
   const next = filtered[position + 1];
   const coverage = pilot ? (pilot.manifest.common_pixels / pilot.manifest.pixels * 100).toFixed(1).replace('.', ',') : '';
@@ -574,9 +576,6 @@ function App() {
                 </button>
                 {!chosen && <p>La revisión se guarda en la ficha de una zona.</p>}
               </> : <p>Este recorte no tiene zonas para revisar. Podés elegir otro recorte para buscar cambios.</p>}
-              {exportRows.length > 0 && <button type="button" className="review-shortcut csv-download" onClick={() => {
-                if (pilot) downloadExport(new Blob([reviewCsv(pilot, exportRows)], { type: 'text/csv;charset=utf-8' }), pilot.id + '-revisiones.csv');
-              }}>Descargar revisiones de este recorte (CSV) ↓</button>}
             </div>}
             <div className="view-options" aria-label="Fecha de la imagen">
               <button aria-pressed={view === 'before'} onClick={() => setView('before')}><strong>Ver 2020</strong><span>{dateLabel(0)}</span></button>
@@ -627,6 +626,7 @@ function App() {
               <div className="section-heading"><span className="step" aria-hidden="true">2</span><div>
                 <h2 ref={listHeading} tabIndex={-1}>Cambios para revisar</h2><p>{features.length ? 'Tocá Revisar para abrir la ficha de una zona.' : pilot ? 'Elegí otro recorte para buscar cambios.' : 'Esperando el análisis.'}</p>
               </div></div>
+              {reviewExports}
               {features.length > 0 && <>
               <label className="filter-label" htmlFor="signal">¿Qué cambios querés revisar?</label>
               <select id="signal" value={signal} onChange={event => { setSignal(event.target.value); setPage(1); }}>
@@ -687,7 +687,7 @@ function App() {
                 <p className="review-storage-note">{cloudForRun ? user ? 'Se guarda para tu equipo.' : 'Te vamos a pedir que ingreses al equipo para guardar.' : 'Para volver a verla, abrí la misma zona en este navegador. Podés descargar el informe después de guardar.'}</p>
               </form>
               {status && <p className={'save-message ' + (saved ? 'success' : '')} role="status">{saved && <strong>Listo. </strong>}{status}</p>}
-              {pilot && current && <ReviewReportButton key={chosen.properties.id} analysis={pilot} candidate={chosen} review={current} />}
+              {reviewExports}
               {saved && next && <button className="next-zone" onClick={() => requestSelection(next.properties.id)}>Revisar la siguiente zona →</button>}
               {current && <details className="previous-review" open={saved}><summary>Ver la última revisión guardada</summary>
                 <p><strong>{current.state}</strong></p><p>{current.reason}</p>
