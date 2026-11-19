@@ -1,25 +1,50 @@
 # Sentinela Selknam
 
-Primer avance de un tablero ambiental para Tierra del Fuego. La demo actual usa React, TypeScript y Leaflet, con integración Supabase preparada para autenticación y revisión compartida.
+**Monitoreo satelital para equipos ambientales de Tierra del Fuego** · Hackathon Soberanía Tech 2026
 
-La aplicación permite seleccionar un punto del sector argentino de la Isla Grande y comparar un recorte de 5,12 × 5,12 km con Sentinel-2 a 10 m. Busca observaciones de enero–marzo de 2020 y 2026, lee las bandas necesarias y calcula cambios de agua y vegetación en el navegador. El piloto preparado sigue disponible para una presentación inmediata. La [arquitectura objetivo](ARQUITECTURA_OBJETIVO.md) conserva la futura implementación institucional y las alertas.
+Sentinela ayuda a decidir dónde conviene inspeccionar posibles impactos de los diques de castores en el sector argentino de la Isla Grande. Compara imágenes reales de Sentinel-2, marca cambios en la señal de agua y vegetación, y permite documentar qué observó la persona que revisó cada zona.
 
-La [propuesta DevOps en AWS](DEVOPS_AWS.md) incluye diagramas, Terraform, CI/CD desde GitHub, observabilidad y un presupuesto desglosado de puesta en marcha y operación.
+[**Abrir la demo pública**](https://gastoncant.github.io/sentinela-selknam/) · [Guía de uso](primer-avance/GUIA_DE_USO.md) · [Arquitectura objetivo en AWS](DEVOPS_AWS.md#flujo-del-piloto-aws)
 
-El [Terraform de referencia y su guía de validación](infra/terraform/README.md) forman parte de los próximos pasos de la presentación final. Se pueden comprobar con planes simulados sin una cuenta AWS.
+## Probá el piloto preparado
 
-## Usar la aplicación
+1. En la demo, tocá **Abrir piloto preparado** para cargar un recorte costero con las imágenes ya procesadas.
+2. Mové el deslizador entre **2020** y **2026**. Los contornos **celestes** marcan aumento de la señal de agua y los **naranjas**, disminución de la señal de vegetación.
+3. Tocá **Elegir una zona para revisar** y abrí la **Zona de agua 60**. Compará las dos ampliaciones, tocá **Ir al formulario de revisión**, registrá tu observación y tocá **Guardar revisión**.
+4. En **Descargar revisiones**, podés generar el **PDF** de la zona con imágenes y comentario, o el **CSV** con las zonas que revisaste en el recorte.
 
-Abrí la [demo pública](https://gastoncant.github.io/sentinela-selknam/) y seguí la [guía de uso](primer-avance/GUIA_DE_USO.md). Incluye cómo elegir y comparar un recorte, guardar una revisión y descargar el PDF de la zona o el CSV del recorte desde un mismo panel.
+![Comparador satelital del piloto costero, con el deslizador y la ficha de la zona de agua 60](primer-avance/guia/piloto-costero-demo.jpg)
 
-Para ver la responsabilidad y el código de cada componente, consultá el [inventario de módulos](primer-avance/MODULOS.md).
-La [pauta de validación](primer-avance/VALIDACION_FINAL.md) detalla qué se probó y cómo contrastarlo con evidencia de campo.
+Para analizar otro sector, elegí un punto en el mapa y tocá **Comparar este recorte**. El navegador procesa un área de **5,12 × 5,12 km** en una grilla de **10 m** y muestra las fechas efectivas y la superficie que pudo comparar. Este recorrido requiere Internet para consultar Earth Search y descargar las bandas satelitales.
 
-## Descargar y ejecutar la demo
+## Cómo interpretar el resultado
 
-1. Descargar el repositorio desde **Code → Download ZIP** y descomprimirlo, o clonarlo con Git.
-2. Instalar Node.js 22.12 o superior. Node.js 24 permite ejecutar la compilación verificada.
-3. Abrir una terminal en la carpeta descomprimida del proyecto y ejecutar:
+El piloto compara imágenes del **8 de febrero de 2020** y del **13 de marzo de 2026**. De los **3,69 km²** del recorte, el **95,7 %** tenía datos válidos en ambas fechas. El método produjo **200 componentes espectrales**, 69 con aumento de señal de agua y 131 con disminución de señal de vegetación. Los contornos de ambas capas pueden superponerse. [Manifiesto del piloto](docs/pilot/manifest.json) · [Método y fuentes](primer-avance/README.md#método-de-los-recortes-bajo-demanda)
+
+La **zona de agua 60** ilustra el criterio de revisión. En sus **222.100 m²** aumentó la señal asociada al agua. En el ensayo se registró como **Falta información**, porque un cambio de nivel en la costa es una explicación posible. Para atribuir el cambio a un dique hacen falta observaciones de campo u otra evidencia independiente. [Pauta de validación](primer-avance/VALIDACION_FINAL.md)
+
+Los recortes nuevos conservan las escenas, fechas, grilla, método y hashes de las bandas muestreadas. Además del PDF y el CSV, el panel para especialistas permite exportar **GeoJSON**, **PNG** y un **manifiesto JSON** para revisar o reproducir el análisis.
+
+## Estado del proyecto
+
+| Etapa | Estado |
+| --- | --- |
+| **Demo pública** | Publicada en GitHub Pages. El análisis se ejecuta en el navegador. Cada revisión se guarda en ese navegador y puede compartirse mediante las exportaciones. |
+| **Revisión compartida** | Integración de Supabase preparada para el piloto y permisos probados con PostgreSQL embebido. Queda pendiente configurar el proyecto remoto, probar dos cuentas con permisos distintos y habilitar ejecuciones compartidas para recortes nuevos. |
+| **Operación en AWS** | Arquitectura y Terraform de referencia con planes simulados. El despliegue, las alertas y los ensayos de recuperación en una cuenta de pruebas son pasos futuros. |
+| **Validación ambiental** | Ensayos de cálculo y de uso documentados. El siguiente paso es contrastar los candidatos y los casos omitidos con operadores y evidencia de campo. Las cámaras trampa son una ampliación en evaluación. |
+
+[Bitácora de verificación](primer-avance/VERIFICACION.md) · [Arquitectura y hoja de ruta](ARQUITECTURA_OBJETIVO.md) · [Propuesta de cámaras trampa](ARQUITECTURA_OBJETIVO.md#validación-de-campo-con-cámaras-trampa)
+
+## Puesta en marcha y presupuesto
+
+La estimación presentada para el **primer año es de USD 16.400**. Contempla la implementación por etapas, las pruebas, la validación de campo, la capacitación y los primeros doce meses de infraestructura AWS. El soporte técnico recurrente y el mantenimiento se presupuestan aparte.
+
+El escenario redundante en AWS se estima en **USD 81–102 mensuales de infraestructura** bajo los supuestos de carga documentados. Es una referencia de planificación para esa partida, incluida en la estimación del primer año. El desglose técnico distingue el piloto del escenario redundante. [Modelo de costos y supuestos](DEVOPS_AWS.md#presupuesto-de-referencia)
+
+## Ejecutar y verificar en local
+
+Descargá el repositorio con **Code → Download ZIP** o clonalo con Git. Usá **Node.js 22.12 o superior** y ejecutá desde la raíz.
 
 ```sh
 cd primer-avance
@@ -27,68 +52,21 @@ npm ci
 npm run dev
 ```
 
-Abrir la dirección **Local** que muestra Vite, normalmente http://127.0.0.1:5173/. Mantener esa terminal abierta mientras se usa la demo. Para detenerla, presionar Ctrl+C.
+Abrí la dirección que muestra Vite, normalmente `http://127.0.0.1:5173/`. En Windows también podés usar [INICIAR_DEMO.cmd](INICIAR_DEMO.cmd). La compilación publicada está en `docs/` y se sirve por HTTP.
 
-En Windows también se puede abrir **INICIAR_DEMO.cmd** desde la carpeta raíz. Comprueba Node.js, instala las dependencias si faltan y arranca la demo.
-
-Para generar una nueva compilación:
+Para verificar la compilación, el método de los recortes, las fuentes territoriales y los permisos del piloto, ejecutá en `primer-avance/`.
 
 ```sh
-cd primer-avance
 npm run build
-npm run preview
-```
-
-La carpeta **docs/** incluye una compilación lista para servir desde un hosting estático. La carpeta **primer-avance/dist/** se genera con el comando de compilación. El piloto usa imágenes y geometrías incluidas. Los recortes nuevos requieren conexión con Earth Search y los COG públicos de Sentinel-2. La instalación inicial necesita acceso a npm.
-
-## Qué demuestra
-
-- Comparación de dos observaciones reales de Sentinel-2 con cortina temporal.
-- Selección de recortes en la isla y procesamiento Sentinel-2 bajo demanda, con fechas efectivas y cobertura común.
-- Hasta seis recortes conservados en el dispositivo para reabrirlos sin volver a descargar sus bandas.
-- Selección de polígonos en el mapa o en una lista, con filtros por agua y vegetación.
-- Fichas con superficie, índices y procedencia.
-- Revisiones con estado y motivo guardadas en el navegador.
-- Panel **Descargar revisiones**, con informe PDF de la zona y CSV de las zonas revisadas del recorte.
-- Descargas de geometrías GeoJSON, imágenes PNG y manifiesto JSON para análisis especializado.
-
-El recorte costero tiene 69 componentes de agua y 131 de vegetación, con 95,68 % de cobertura común válida. Las capas pueden solaparse y su causa requiere evidencia independiente.
-
-La interfaz incorpora relieve y caminos como referencia de selección, una guía visible de colores y contornos y dos ampliaciones alineadas en cada ficha. El footer identifica Sentinela Selknam, Gobierno de TDF y Hackathon Soberanía Tech 2026, con avisos de derechos, licencias de terceros y alcance del prototipo. El logo propuesto usa cuernos laterales y colores fueguinos, a partir de las referencias aportadas. La identidad de la demo no acredita adopción institucional. Ver [identidad y prompt del logo](primer-avance/IDENTIDAD_VISUAL.md) y [criterios para una herramienta operativa seria](CRITERIOS_DE_MADUREZ.md).
-
-## Supabase
-
-La demo arranca sin variables de entorno y permite ensayar el recorrido. Las revisiones de ese modo se guardan en el navegador del visitante.
-
-Para la revisión compartida, configurar un proyecto Supabase con los scripts y pasos de [primer-avance/README.md](primer-avance/README.md#conectar-supabase-free). El cliente, las políticas RLS y la función de revisión están implementados. La cuenta Supabase remota sigue pendiente de configuración. El SQL actual cubre el piloto: los recortes nuevos conservan sus revisiones localmente hasta implementar e importar ejecuciones versionadas.
-
-El frontend admite únicamente la URL y la clave publicable del proyecto. Las claves secretas y las credenciales de base de datos se mantienen fuera del navegador y de Git.
-
-## Entrega
-
-- [Guía de uso actual](primer-avance/GUIA_DE_USO.md)
-- [Módulos de la aplicación](primer-avance/MODULOS.md)
-- [Documento original del primer avance en PDF](Sentinela_Selknam_Primer_Avance.pdf)
-- [Documento original del primer avance en Word](Sentinela_Selknam_Primer_Avance.docx)
-- [Guía de la demo y conexión a Supabase](primer-avance/README.md)
-- [Pruebas y límites del avance](primer-avance/VERIFICACION.md)
-- [Demo pública en GitHub Pages](https://gastoncant.github.io/sentinela-selknam/)
-- [Vista previa privada para la cuenta propietaria](https://sentinela-selknam-primer-avance.glitteringbadge.chatgpt.site)
-
-La vista previa privada requiere acceso de su propietaria. El código y los productos de la demo pueden descargarse desde este repositorio público.
-
-## Verificar
-
-Desde la carpeta primer-avance:
-
-```sh
-npm ci
-npm run build
+node verify-crop.mjs
+node verify-province.mjs
 node verify-db.mjs
 ```
 
-El ensayo SQL usa PostgreSQL embebido para verificar los permisos y el control de versión. Los resultados deben repetirse contra un proyecto Supabase real antes de operar con usuarios.
+## Documentación técnica
 
-## Otros archivos del proyecto
-
-El prototipo Django y la propuesta AWS anteriores permanecen en la raíz. Su guía está en [README_DJANGO.md](README_DJANGO.md). El primer avance presentado se concentra en la carpeta primer-avance.
+- [Módulos y código de la aplicación](primer-avance/MODULOS.md)
+- [Instalación, conexión a Supabase y método de análisis](primer-avance/README.md)
+- [Terraform, CI/CD y pruebas simuladas](infra/terraform/README.md)
+- [Documento del primer avance (PDF)](Sentinela_Selknam_Primer_Avance.pdf)
+- [Guía del prototipo Django](README_DJANGO.md)
