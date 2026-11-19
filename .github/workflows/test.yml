@@ -5,6 +5,9 @@ permissions:
 jobs:
   checks:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: prototipo-django
     env:
       LOCAL_DEMO: "1"
     steps:

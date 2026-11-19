@@ -1,13 +1,13 @@
 PRIMER AVANCE · SENTINELA SELKNAM
 
 Documento del avance
-Sentinela_Selknam_Primer_Avance.pdf
+docs/Sentinela_Selknam_Primer_Avance.pdf
 La versión DOCX queda disponible para editar.
 
 Repositorio o carpeta del proyecto
 Repositorio público https://github.com/gastoncant/sentinela-selknam
 Descargar desde Code > Download ZIP y descomprimir.
-En Windows, abrir INICIAR_DEMO.cmd con Node.js 22.12 o superior instalado.
+En Windows, abrir INICIAR_DEMO.cmd desde la raíz del repositorio con Node.js 22.12 o superior instalado.
 También puede compartirse la carpeta mediante Drive.
 
 Demo
@@ -50,5 +50,5 @@ de autenticación y persistencia compartida.
 Los recortes nuevos usan una grilla de 10 m y ventanas enero-marzo de 2020
 y 2026. La cobertura y las fechas dependen de las escenas disponibles.
 No representan detecciones confirmadas de castores. La arquitectura futura
-y los avisos SNS se documentan en ARQUITECTURA_OBJETIVO.md, sin controles
+y los avisos SNS se documentan en documentacion/ARQUITECTURA_OBJETIVO.md, sin controles
 de alertas en la aplicación actual.

@@ -39,7 +39,7 @@ La interfaz usa texto base de 18 px, botones de al menos 50 px de alto y una pal
 
 El selector incorpora OpenTopoMap (relieve, SRTM y ríos) y OpenStreetMap (caminos y lugares), con atribuciones visibles. Las teselas se solicitan para la vista del navegador; no se ofrece descarga masiva ni mapas offline. Son cartografía de referencia, con fechas distintas de las observaciones Sentinel-2. Si el servicio falla, los accesos por zona y el piloto siguen disponibles. Proveedores: [OpenTopoMap](https://github.com/der-stefan/OpenTopoMap) y [política de teselas OSM](https://operations.osmfoundation.org/policies/tiles/).
 
-La guía «Qué estás viendo» distingue señal de agua, señal de vegetación, color infrarrojo y píxeles excluidos. Al abrir una ficha, las dos ampliaciones se extraen del mismo rectángulo de los PNG originales, sobre su grilla y con el mismo contorno. No se inventan imágenes, valores de índice por fecha ni una confirmación de diques. El orden por superficie es una ayuda de lectura; no establece prioridad ambiental. Para el paso a operación, consultar [criterios de madurez](../CRITERIOS_DE_MADUREZ.md).
+La guía «Qué estás viendo» distingue señal de agua, señal de vegetación, color infrarrojo y píxeles excluidos. Al abrir una ficha, las dos ampliaciones se extraen del mismo rectángulo de los PNG originales, sobre su grilla y con el mismo contorno. No se inventan imágenes, valores de índice por fecha ni una confirmación de diques. El orden por superficie es una ayuda de lectura; no establece prioridad ambiental. Para el paso a operación, consultar [criterios de madurez](../documentacion/CRITERIOS_DE_MADUREZ.md).
 
 La lista ofrece una alternativa textual al mapa. Las escenas se comparan con máscara común y grilla UTM 19 Sur. Las capas pueden solaparse. Las señales requieren revisión y evidencia para atribuir una causa. Los umbrales son exploratorios.
 
@@ -68,7 +68,7 @@ La integración está implementada en código. La cuenta Supabase y sus credenci
 
 ## Alcance insular y alertas
 
-La [arquitectura objetivo](../ARQUITECTURA_OBJETIVO.md) describe datos y permisos, ejecuciones versionadas, procesamiento por sectores, bandeja de seguimiento, outbox, SNS, colas, adaptadores y fases de aceptación. Los envíos externos requieren implementar y configurar esos servicios y sus destinatarios.
+La [arquitectura objetivo](../documentacion/ARQUITECTURA_OBJETIVO.md) describe datos y permisos, ejecuciones versionadas, procesamiento por sectores, bandeja de seguimiento, outbox, SNS, colas, adaptadores y fases de aceptación. Los envíos externos requieren implementar y configurar esos servicios y sus destinatarios.
 
 El contorno insular procede del WFS de IGN, capa provincia, código 94. Se selecciona el mayor polígono conectado dentro del encuadre de la Isla Grande y se generaliza a 0,004 grados. Los rótulos proceden de Georef. `public/province/manifest.json` conserva las fuentes y hashes del selector. No se usa MODIS para los recortes.
 

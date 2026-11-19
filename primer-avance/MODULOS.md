@@ -1,6 +1,6 @@
 # Módulos de Sentinela Selknam
 
-Este inventario describe la demo pública. Para usarla, consultá el [instructivo](GUIA_DE_USO.md). Las etapas de infraestructura futura se documentan en [Arquitectura objetivo](../ARQUITECTURA_OBJETIVO.md).
+Este inventario describe la demo pública. Para usarla, consultá el [instructivo](GUIA_DE_USO.md). Las etapas de infraestructura futura se documentan en [Arquitectura objetivo](../documentacion/ARQUITECTURA_OBJETIVO.md).
 
 | Módulo | Qué hace | Dónde está |
 | --- | --- | --- |
@@ -18,4 +18,4 @@ Este inventario describe la demo pública. Para usarla, consultá el [instructiv
 
 El PDF se genera en el navegador a partir de la última revisión guardada y de los PNG de origen, recortados con la misma geometría que usa la ficha. El CSV incluye una fila por zona revisada del recorte activo. Los borradores y el historial de versiones quedan fuera de esas exportaciones. El GeoJSON aporta la geometría y el JSON conserva fuentes, fechas y parámetros.
 
-GitHub Actions verifica el build, el análisis de recortes, la integridad de la cartografía y las reglas SQL del piloto. La [bitácora de verificación](VERIFICACION.md) registra los ensayos observados en navegador. La [propuesta DevOps](../DEVOPS_AWS.md) y el [Terraform](../infra/terraform/README.md) describen el despliegue AWS previsto, incluidas alertas y observabilidad. La demo procesa y exporta desde el navegador.
+GitHub Actions verifica el build, el análisis de recortes, la integridad de la cartografía y las reglas SQL del piloto. La [bitácora de verificación](VERIFICACION.md) registra los ensayos observados en navegador. La [propuesta DevOps](../documentacion/DEVOPS_AWS.md) y el [Terraform](../infra/terraform/README.md) describen el despliegue AWS previsto, incluidas alertas y observabilidad. La demo procesa y exporta desde el navegador.

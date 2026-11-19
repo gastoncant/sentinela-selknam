@@ -25,8 +25,8 @@ El [SIAT de GEF Castor](https://gefcastor.mma.gob.cl/sistema-de-informacion-y-al
 4. Cuantificar entre los primeros diez candidatos cuántos justifican seguimiento según el criterio acordado. Revisar también los controles sin señal y anotar omisiones. Separar los casos no evaluables. La muestra de un sector no permite inferir el rendimiento para toda la isla.
 5. Contrastar los casos y discutir desacuerdos antes de ajustar el orden o el umbral. Repetir con otro sector que no se usó para ajustar la regla.
 
-Como ampliación futura, las [cámaras trampa y SpeciesNet](../ARQUITECTURA_OBJETIVO.md#validación-de-campo-con-cámaras-trampa) se evaluarían con imágenes locales previamente etiquetadas. Los registros confirmados podrían adjuntarse a una revisión como evidencia de presencia reciente en un sitio.
+Como ampliación futura, las [cámaras trampa y SpeciesNet](../documentacion/ARQUITECTURA_OBJETIVO.md#validación-de-campo-con-cámaras-trampa) se evaluarían con imágenes locales previamente etiquetadas. Los registros confirmados podrían adjuntarse a una revisión como evidencia de presencia reciente en un sitio.
 
 ## Trabajo compartido y operación
 
-Hoy el recorte y sus revisiones se conservan en el navegador y se pueden compartir como PDF, CSV y GeoJSON. El CSV puede acompañar los insumos en un intercambio manual. Para una revisión compartida en la app, el siguiente ensayo es importar una ejecución versionada en Supabase y verificar que dos operadores con permisos vean la misma zona y su historial. La configuración remota y el ensayo están pendientes. AWS se describe como [arquitectura objetivo con escenarios y costos](../DEVOPS_AWS.md).
+Hoy el recorte y sus revisiones se conservan en el navegador y se pueden compartir como PDF, CSV y GeoJSON. El CSV puede acompañar los insumos en un intercambio manual. Para una revisión compartida en la app, el siguiente ensayo es importar una ejecución versionada en Supabase y verificar que dos operadores con permisos vean la misma zona y su historial. La configuración remota y el ensayo están pendientes. AWS se describe como [arquitectura objetivo con escenarios y costos](../documentacion/DEVOPS_AWS.md).

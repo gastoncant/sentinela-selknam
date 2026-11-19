@@ -13,7 +13,7 @@ La revisión externa del 17 de noviembre de 2026 motivó tres ajustes: acercar e
 | Piloto AWS | Terraform en `us-west-2`, S3/CloudFront, HTTP API, Cognito, una tarea Fargate, RDS PostGIS y Lambda GIS. | Carga medida que justifica redundancia y objetivos de disponibilidad. |
 | Producción redundante | Dos tareas de API y RDS Multi-AZ como base. El almacenamiento y las colas siguen administrados. | Validación de capacidad, failover, recuperación y costo en staging. |
 
-El perfil de portafolio permite ensayar antes con S3/CloudFront, IaC, un recorte, una DLQ y un canario Lambda, dejando API y RDS para la siguiente fase. El [Terraform y su guía](infra/terraform/README.md) incluyen los cinco perfiles, los contratos de las imágenes y los criterios de aceptación.
+El perfil de portafolio permite ensayar antes con S3/CloudFront, IaC, un recorte, una DLQ y un canario Lambda, dejando API y RDS para la siguiente fase. El [Terraform y su guía](../infra/terraform/README.md) incluyen los cinco perfiles, los contratos de las imágenes y los criterios de aceptación.
 
 ## Flujo del piloto AWS
 
@@ -48,7 +48,7 @@ flowchart LR
 
 ## Entrega y recuperación
 
-Terraform separa bootstrap y plataforma. Los estados futuros de staging y producción usan claves S3 distintas con locking. **GitHub Actions con OIDC es el camino recomendado.** El ejemplo de publicación del frontend queda en documentación. Como variante de portafolio, la misma infraestructura puede crear CodePipeline y CodeBuild para el frontend con una conexión GitHub autorizada y aprobación en producción. La API usa rolling de ECS con circuit breaker. CodeDeploy queda disponible para un canario del alias Lambda GIS del 10 % durante cinco minutos, con alarmas y reversión. La promoción de los servicios requiere imágenes finales, roles y scripts integrados al release. [Contratos y operación](infra/terraform/README.md#cicd-y-operación)
+Terraform separa bootstrap y plataforma. Los estados futuros de staging y producción usan claves S3 distintas con locking. **GitHub Actions con OIDC es el camino recomendado.** El ejemplo de publicación del frontend queda en documentación. Como variante de portafolio, la misma infraestructura puede crear CodePipeline y CodeBuild para el frontend con una conexión GitHub autorizada y aprobación en producción. La API usa rolling de ECS con circuit breaker. CodeDeploy queda disponible para un canario del alias Lambda GIS del 10 % durante cinco minutos, con alarmas y reversión. La promoción de los servicios requiere imágenes finales, roles y scripts integrados al release. [Contratos y operación](../infra/terraform/README.md#cicd-y-operación)
 
 Antes de habilitar producción, demostrar entrega de un aviso por DLQ, reversión de una candidata y restauración de RDS y objetos versionados. Comparar permisos de dos organizaciones y medir duración y datos recuperados. El ensayo de recuperación ya acreditado en el repositorio corresponde al prototipo SQLite.
 
@@ -83,4 +83,4 @@ Fuentes de tarifa y supuestos para confirmar: [Fargate](https://aws.amazon.com/f
 | Infraestructura 12 meses | 12 × USD 43–57 | 516–684 |
 | **Subtotal técnico del primer año** | Suma de partidas de este escenario | **3.516–5.484** |
 
-Las horas son supuestos, no cotización. La migración de datos reales, calibración de teledetección, validación de campo, soporte y alta institucional se estiman aparte. El [presupuesto histórico de alcance mayor](AWS.md#presupuesto-de-planificación-en-usd) incluye rubros de desarrollo que se deben conciliar antes de combinar importes. AWS Budgets ayuda a detectar desviaciones, y los límites de concurrencia, retención y almacenamiento controlan el consumo.
+Las horas son supuestos, no cotización. La migración de datos reales, calibración de teledetección, validación de campo, soporte y alta institucional se estiman aparte. El [presupuesto histórico de alcance mayor](../prototipo-django/AWS.md#presupuesto-de-planificación-en-usd) incluye rubros de desarrollo que se deben conciliar antes de combinar importes. AWS Budgets ayuda a detectar desviaciones, y los límites de concurrencia, retención y almacenamiento controlan el consumo.

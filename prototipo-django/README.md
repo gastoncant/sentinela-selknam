@@ -1,10 +1,10 @@
-# Sentinela Selknam
+# Sentinela Selknam · Prototipo Django
 
 Tablero de revisión de cambios de agua y vegetación en Tierra del Fuego. Incluye un piloto real de Sentinel-2 ya procesado. El operador alterna dos observaciones alineadas, localiza polígonos, descarga geometrías y documenta hipótesis. La organización decide si publica el producto espectral. Las revisiones y las identidades quedan en la vista privada.
 
 ## Probar en Windows
 
-Desde la raíz del checkout, con Python 3.12 y PowerShell:
+Desde la carpeta `prototipo-django/` del checkout, con Python 3.12 y PowerShell:
 
 ```powershell
 py -3.12 -m venv .venv

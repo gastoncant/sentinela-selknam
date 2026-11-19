@@ -22,11 +22,11 @@ El alcance acordado es la Isla Grande de Tierra del Fuego. El mapa funciona como
 
 El piloto se conserva como producto preparado. Los nuevos recortes generan sus propias ejecuciones locales y geometrías con fechas, cobertura y trazabilidad. La validación biológica sigue pendiente. La aplicación no afirma que los cambios sean diques ni presencia confirmada de castores.
 
-El [inventario de módulos](primer-avance/MODULOS.md) describe la implementación actual. El [instructivo](primer-avance/GUIA_DE_USO.md) documenta el recorrido en la app publicada.
+El [inventario de módulos](../primer-avance/MODULOS.md) describe la implementación actual. El [instructivo](../primer-avance/GUIA_DE_USO.md) documenta el recorrido en la app publicada.
 
 ## Fuentes y alcance territorial
 
-Los recortes consultan Earth Search y leen COG Sentinel-2 L2A desde almacenamiento público. Se buscan observaciones entre enero y marzo de 2020 y 2026 y se seleccionan escenas utilizables según SCL, con búsqueda acotada. Se muestran fechas efectivas, superficie común y píxeles excluidos. Los índices y componentes se calculan sobre 10 m; SCL procede de 20 m. El método y sus límites se detallan en [primer-avance/README.md](primer-avance/README.md#método-de-los-recortes-bajo-demanda). [Earth Search](https://github.com/element84/earth-search)
+Los recortes consultan Earth Search y leen COG Sentinel-2 L2A desde almacenamiento público. Se buscan observaciones entre enero y marzo de 2020 y 2026 y se seleccionan escenas utilizables según SCL, con búsqueda acotada. Se muestran fechas efectivas, superficie común y píxeles excluidos. Los índices y componentes se calculan sobre 10 m; SCL procede de 20 m. El método y sus límites se detallan en [primer-avance/README.md](../primer-avance/README.md#método-de-los-recortes-bajo-demanda). [Earth Search](https://github.com/element84/earth-search)
 
 La fase actual realiza el cómputo en un Worker del navegador y conserva hasta seis recortes en IndexedDB, sujeto a cuota o borrado del dispositivo. Esto permite explorar otras zonas sin un servidor de análisis. El catálogo y los COG requieren conectividad y CORS; el piloto preparado permanece como alternativa. La operación institucional requiere centralizar ejecuciones, productos y revisiones con permisos, respaldo y supervisión. Para los recortes nuevos, la identidad incluye grilla, escenas, fechas, hash del método y contenido de las bandas muestreadas.
 
@@ -65,7 +65,7 @@ Primero se configura Supabase, se aplican las migraciones existentes, se habilit
 
 ## Arquitectura administrada objetivo en AWS
 
-La [propuesta DevOps en AWS](DEVOPS_AWS.md) y el [Terraform de referencia](infra/terraform/README.md) describen el piloto administrado en `us-west-2`. Usan HTTP API, Cloud Map y una API Fargate, sin NAT ni ALB. Lambda procesa los recortes y otra Lambda ingiere sus manifiestos en RDS privado. GitHub Actions con OIDC es el camino principal. CodePipeline y CodeBuild son una variante de publicación del frontend, y CodeDeploy permite ensayar una liberación canaria de la Lambda GIS. CloudWatch concentra métricas y registros, con Grafana y Prometheus como ampliaciones.
+La [propuesta DevOps en AWS](DEVOPS_AWS.md) y el [Terraform de referencia](../infra/terraform/README.md) describen el piloto administrado en `us-west-2`. Usan HTTP API, Cloud Map y una API Fargate, sin NAT ni ALB. Lambda procesa los recortes y otra Lambda ingiere sus manifiestos en RDS privado. GitHub Actions con OIDC es el camino principal. CodePipeline y CodeBuild son una variante de publicación del frontend, y CodeDeploy permite ensayar una liberación canaria de la Lambda GIS. CloudWatch concentra métricas y registros, con Grafana y Prometheus como ampliaciones.
 
 La API valida identidad, organización, rol, propiedad del recurso y cuotas. Los tokens Cognito deben comprobar emisor y audiencia. La consulta pública devuelve solo los campos publicados. Los productos privados usan acceso autorizado o URL firmadas de vigencia limitada. Los rásteres grandes se sirven desde almacenamiento de objetos y teselas.
 

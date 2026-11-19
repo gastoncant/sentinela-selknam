@@ -1,6 +1,6 @@
 # Operación en AWS
 
-Esta guía corresponde al prototipo histórico de Lightsail. Para la arquitectura administrada con Terraform, CI/CD, observabilidad y el presupuesto del piloto actual, consultá [Arquitectura DevOps en AWS](DEVOPS_AWS.md).
+Esta guía corresponde al prototipo histórico de Lightsail. Para la arquitectura administrada con Terraform, CI/CD, observabilidad y el presupuesto del piloto actual, consultá [Arquitectura DevOps en AWS](../documentacion/DEVOPS_AWS.md).
 
 ## Perfil implementado
 
@@ -10,7 +10,7 @@ La propuesta previa contemplaba React, FastAPI, PostGIS y eventualmente Supabase
 
 ## Provisionamiento
 
-Desde una estación con AWS CLI autenticada, verificá la identidad y elegí región, zona, blueprint de Ubuntu 24.04, bundle Linux con IPv4, clave SSH registrada en Lightsail y la IPv4 administrativa con máscara /32. Los identificadores de planes son regionales. El siguiente ejemplo usa variables de shell POSIX previamente definidas.
+Desde la carpeta `prototipo-django/`, en una estación con AWS CLI autenticada, verificá la identidad y elegí región, zona, blueprint de Ubuntu 24.04, bundle Linux con IPv4, clave SSH registrada en Lightsail y la IPv4 administrativa con máscara /32. Los identificadores de planes son regionales. El siguiente ejemplo usa variables de shell POSIX previamente definidas.
 
 ```sh
 aws sts get-caller-identity
@@ -22,7 +22,7 @@ aws cloudformation deploy --region "$REGION" --stack-name sentinela-piloto \
 aws cloudformation describe-stacks --region "$REGION" --stack-name sentinela-piloto --query 'Stacks[0].Outputs'
 ```
 
-Creá un registro DNS A del dominio a la IPv4 devuelta. Transferí el código del ZIP o del checkout por SSH al host, en una carpeta accesible únicamente a los administradores. Instalá Docker y Compose v2 en Ubuntu y ejecutá desde la carpeta de la entrega:
+Creá un registro DNS A del dominio a la IPv4 devuelta. Transferí el código del ZIP o del checkout por SSH al host, en una carpeta accesible únicamente a los administradores. Instalá Docker y Compose v2 en Ubuntu y ejecutá desde la carpeta `prototipo-django/` del checkout:
 
 ```sh
 sudo apt-get update

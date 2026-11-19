@@ -1,4 +1,4 @@
 *.py text eol=lf
-sources/*.json -text
-pilot/* -text
+prototipo-django/sources/*.json -text
+prototipo-django/pilot/* -text
 

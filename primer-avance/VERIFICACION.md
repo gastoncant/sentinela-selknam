@@ -49,7 +49,7 @@ En el navegador se comprobaron OpenTopoMap con teselas de relieve cargadas, el c
 
 En la zona de agua 6 del piloto, las dos ampliaciones tienen el mismo viewBox `124 48 68 68`, la misma geometría y sus respectivas imágenes de 2020 y 2026. En 390 × 844 midieron 153 px por lado cada una y el documento 375 px de ancho, sin desbordamiento horizontal. Se comprobó el avance del deslizador con teclado a 51 %, la lista ordenada por superficie y el footer con únicamente el texto «Gobierno de TDF» y el logo cargado. Se revisó también la distribución en 1440 × 1000 y se mantuvieron controles principales de al menos 50 px.
 
-La lectura visual no valida la causa ambiental de los polígonos. El piloto costero puede incluir cambios del agua que ya existía, variaciones de marea y otras causas ajenas a diques. Las limitaciones y criterios de validación se detallan en `CRITERIOS_DE_MADUREZ.md`. La evaluación con operadores, el lector de pantalla y las mediciones en conexiones lentas siguen pendientes. El PNG original del logo ocupa unos 661 kB y queda sujeto al presupuesto de recursos del futuro despliegue.
+La lectura visual no valida la causa ambiental de los polígonos. El piloto costero puede incluir cambios del agua que ya existía, variaciones de marea y otras causas ajenas a diques. Las limitaciones y criterios de validación se detallan en [Criterios de madurez](../documentacion/CRITERIOS_DE_MADUREZ.md). La evaluación con operadores, el lector de pantalla y las mediciones en conexiones lentas siguen pendientes. El PNG original del logo ocupa unos 661 kB y queda sujeto al presupuesto de recursos del futuro despliegue.
 
 ## Revisión del logo y footer para la hackathon
 
