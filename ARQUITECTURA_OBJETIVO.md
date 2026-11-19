@@ -180,6 +180,20 @@ El próximo incremento debería completar persistencia real y ejecuciones versio
 
 Los [criterios de madurez para una herramienta operativa](CRITERIOS_DE_MADUREZ.md) priorizan validación ambiental, comparabilidad temporal, datos compartidos, reproducibilidad, continuidad de los trabajos, recuperación y evaluación con operadores. El diseño de la interfaz y el footer de la demo no acreditan por sí solos esos criterios ni una adopción institucional.
 
+## Validación de campo con cámaras trampa
+
+**Estado.** Propuesta de mejora futura para el sector argentino de la Isla Grande de Tierra del Fuego. La demo pública en GitHub Pages todavía funciona con evidencia satelital y revisiones del operador. La incorporación de cámaras y la precisión de SpeciesNet en imágenes locales quedan por evaluar.
+
+**Objetivo.** Usar los cambios de agua y vegetación observados desde el satélite para priorizar sitios de inspección. Una cámara trampa puede aportar evidencia de actividad reciente de castores en un punto determinado. Una foto confirmada documenta presencia en un lugar y momento. Atribuir un cambio hídrico a un dique requiere inspeccionar el sitio y relacionar las observaciones con las fechas del recorte. La ausencia de registros se interpreta como falta de detección durante el período observado. Un estudio de Exactas UBA encontró que la efectividad de las cámaras para detectar castores remanentes o que volvieron a ocupar sitios varió según el ambiente y la estación. [Tesis de Exactas UBA](https://bibliotecadigital.exactas.uba.ar/collection/tesis/document/tesis_n7126_Jusim)
+
+**Evaluación e integración.**
+
+1. **Probar con imágenes locales.** Conseguir fotos o secuencias etiquetadas por el equipo ambiental e incluir casos de día y de noche, animales parcialmente visibles y eventos sin castores. CameraTrapAI combina MegaDetector, que localiza animales en las imágenes, y SpeciesNet, que sugiere la especie. Comparar las sugerencias con la revisión humana, medir detecciones correctas, falsas alarmas, omisiones y tiempo por evento, y comprobar el efecto del filtro geográfico para Argentina. [Repositorio de CameraTrapAI](https://github.com/google/cameratrapai)
+2. **Probar la ficha con evidencia de campo.** Si el ensayo justifica un piloto, acordar unos pocos sitios con el equipo ambiental y comenzar con cámaras infrarrojas, tarjetas SD y procesamiento local por lotes. Guardar la foto seleccionada, el sitio, la fecha de captura, la observación y quién la revisó. Vincular el registro a la zona revisada para poder reutilizarlo con recortes de otras fechas. La ficha y el PDF podrían presentar la foto junto a la comparación satelital, con su fecha y alcance.
+3. **Automatizar según el volumen.** Si el piloto ahorra trabajo, evaluar una carga autenticada a S3 privado y una cola de procesamiento por lotes. Las predicciones quedarían pendientes de revisión humana y se guardaría la versión del modelo y su puntuación para trazabilidad. Restringir el acceso a originales y ubicaciones, y acordar la retención de capturas que puedan incluir personas.
+
+**Presupuesto.** Cotizar por separado equipos, instalación, baterías, visitas, revisión humana, almacenamiento y cómputo adicional. La decisión de escalar depende de la utilidad de la evidencia para priorizar inspecciones y del costo de obtenerla y revisarla.
+
 ## Seguridad y operación
 
 Las pruebas incluyen operaciones anónimas, aislamiento, modificación de roles, concurrencia, duplicación de tareas y eventos, tamaños excesivos, sesión vencida y caída de proveedor. Los callbacks verifican autenticidad. El servidor limita destinos, tipos y tamaños y protege reenvíos y administración.
