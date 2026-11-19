@@ -53,7 +53,7 @@ Para analizar otro sector, elegí un punto en el mapa y tocá **Comparar este re
 
 ## Presupuesto
 
-La estimación del primer año es de **USD 16.400**. Incluye implementación por etapas, pruebas, validación de campo, capacitación y doce meses de infraestructura AWS. La infraestructura redundante se estima en **USD 81–102 por mes** y ya forma parte de ese presupuesto. Soporte y mantenimiento se cotizan aparte. [Modelo de costos](documentacion/DEVOPS_AWS.md#presupuesto-de-referencia)
+La estimación del primer año con AWS redundante es de **USD 14.640**. Incluye **USD 13.440** de implementación por etapas, con pruebas, validación de campo, capacitación y contingencia, y **USD 1.200** de infraestructura por doce meses a unos **USD 100 por mes**. Soporte y mantenimiento se cotizan aparte. [Desglose y supuestos](documentacion/DEVOPS_AWS.md#presupuesto-de-presentación-con-redundancia)
 
 ## Dónde está cada cosa
 

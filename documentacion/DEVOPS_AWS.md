@@ -84,3 +84,23 @@ Fuentes de tarifa y supuestos para confirmar: [Fargate](https://aws.amazon.com/f
 | **Subtotal técnico del primer año** | Suma de partidas de este escenario | **3.516–5.484** |
 
 Las horas son supuestos, no cotización. La migración de datos reales, calibración de teledetección, validación de campo, soporte y alta institucional se estiman aparte. El [presupuesto histórico de alcance mayor](../prototipo-django/AWS.md#presupuesto-de-planificación-en-usd) incluye rubros de desarrollo que se deben conciliar antes de combinar importes. AWS Budgets ayuda a detectar desviaciones, y los límites de concurrencia, retención y almacenamiento controlan el consumo.
+
+### Presupuesto de presentación con redundancia
+
+La estimación del proyecto completo para la presentación toma los rubros de implementación del [presupuesto histórico](../prototipo-django/AWS.md#presupuesto-de-planificación-en-usd) y el perfil redundante previsto con Terraform. El subtotal técnico anterior corresponde al piloto acotado y comparte partidas con esta estimación.
+
+| Partida del primer año | USD |
+| --- | ---: |
+| Desarrollo GIS | 4.000 |
+| Teledetección | 3.600 |
+| Pruebas y control de calidad | 1.000 |
+| Capacitación | 400 |
+| Validación de campo | 1.200 |
+| Puesta en marcha de infraestructura (40 h × USD 25) | 1.000 |
+| Base de implementación | 11.200 |
+| Contingencia (20 % de USD 11.200) | 2.240 |
+| **Implementación con contingencia** | **13.440** |
+| **AWS redundante durante doce meses (12 × USD 100)** | **1.200** |
+| **Total estimado del primer año** | **14.640** |
+
+USD 100 por mes es la referencia elegida dentro del rango de **USD 81–102 por mes** para la configuración con dos tareas de API y RDS Multi-AZ. Ese rango lleva el primer año a **USD 14.412–14.664**. El monto de presentación incluye los primeros doce meses de AWS. El mantenimiento y el soporte recurrentes se presupuestan aparte.
